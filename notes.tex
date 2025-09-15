@@ -1,0 +1,93 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp, gensymb}
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage{ragged2e}
+\usepackage{amssymb}
+\usepackage{wasysym}
+\usepackage{subcaption}
+\usepackage[labelfont=bf]{caption}
+\usepackage[margin=2cm]{geometry}
+\usepackage[most]{tcolorbox}
+\usepackage{adjustbox}
+\usepackage{multirow}
+\usepackage{marginnote}
+\usepackage{float}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=darkgray,
+    filecolor=darkgray,      
+    urlcolor=darkgray,
+    pdfpagemode=FullScreen,
+    citecolor=darkgray,
+    }
+\urlstyle{same}
+\usepackage{tablefootnote}
+\usepackage{footnote}
+\usepackage{graphicx}
+\renewcommand{\familydefault}{\sfdefault}
+\captionsetup{font={sf}}
+\newcommand{\ee}{\mathrm{e}}
+\newcommand{\ii}{\mathrm{i}}
+\usepackage{svg}
+\svgsetup{inkscapepath=svgsubdir}
+\begin{document}
+\title{Zagadnienie dynamiki wielomianów}
+\author{Marta}
+\date{\today}
+\maketitle
+
+\section{Wstęp}
+These are my notes for the master's program.
+Przyjmijmy, że w stanie stacjonarnym $t=0$ mamy do czynienia z układem opisanym przez wielomiany
+\begin{equation}
+    U(x) = \sum_{i=0}^2 a_i x^i
+    =
+    \begin{cases}
+        U^{(\mathrm{C}, \; l)}(x), \quad x\in (-\infty; \; x_{\mathrm{C}}) \\
+        U^{(\mathrm{B}, \; l)}(x), \quad x\in (x_{\mathrm{C}}; \; x_{\mathrm{T}})\\
+        U^{(\mathrm{T}, \; l)}(x), \quad x\in (x_{\mathrm{T}}; \; \infty).
+    \end{cases}
+    \label{eq:stacjonarny-ogolna-postac}
+\end{equation}
+przy czym $a_i$ są stałymi, a $x_{\mathrm{C}}$ i $x_{\mathrm{T}}$ są punktami granicznymi.
+Możemy też zapisać postać wielominaów w postaci kanonicznej przy następującymi zależnościach między postacią ogólną~\eqref{eq:stacjonarny-ogolna-postac}
+\begin{equation}
+    p \equiv \frac{-a_1}{2a_0},\\
+    q \equiv \frac{a_1^2+ 4a_0 a_2}{4a_2}
+\end{equation}
+dla każdej wartości pary zasad $l=\mathrm{A-T, \; G-C}$ i form $\Tilde{F}$.
+Możemy zatem zapisać wielomiany w postaci kanonicznej
+\begin{align}
+    U^{(\mathrm{C})}(x) = a_2^{(\mathrm{C})} (x - p^{\mathrm{(C)}})^2 + q^{(\mathrm{C})}, \quad x\in (-\infty; \; x_{\mathrm{C}}) \\
+    U^{(\mathrm{B})}(x) = a_2^{(\mathrm{B})} (x - p^{(\mathrm{B})})^2 + q^{(\mathrm{B})}, \quad x\in (x_{\mathrm{C}}; \; x_{\mathrm{T}})\\
+    U^{(\mathrm{T})}(x) = a_2^{(\mathrm{T})} (x - p^{(\mathrm{T})})^2 + q^{(\mathrm{T})}, \quad x\in (x_{\mathrm{T}}; \; \infty),
+\end{align}
+przy czym $U^{(\mathrm{\Tilde{F}})}(x)=U^{(\mathrm{\Tilde{F}}, \; l)}(x)$, $p^{(\Tilde{F})}=p^{(\Tilde{F}; \; l)}$, $q^{(\Tilde{F})}=q^{(\Tilde{F}; \; l)}$, $a_2^{(\Tilde{F})}=a_2^{(\Tilde{F}; \; l)}$ dla danego oscylatora $\Tilde{F}$ oraz pary zasad $l$.
+
+\section{Wprowadzenie zależności od czasu}
+Poprzez ciągłość będziemy mogli uzyskać pewne zależności między parametrami, które chcemy ustalić za zmienne niezależne i zależne.
+\begin{enumerate}
+\item Będziemy chcieli wprowadzić zależność czasową dla współczynników $a_2=a_2(t)$ dla każdej z form $F=\mathrm{C}, \; T$ i par zasad~$l$.
+Tym samym, $a_2^{(\mathrm{B})}(t)$ będzie również zmienna w czasie, jednak będzie ona zależała od $a_2^{(\mathrm{C})}(t)$ i $a_2^{(\mathrm{T})}(t)$ poprzez warunki ciągłości w punktach granicznych $x_{\mathrm{C}}$ i $x_{\mathrm{T}}$ 
+    \item Drugą możliwością będzie zapisanie punktów granicznych również jako zależne od czasu $x_{\mathrm{F}}=x_{\mathrm{F}}(t)$, jednak poprzez warunki ciągłości będą one zmiennymi zależnymi. 
+    Pozostałe współczynniki $a^{\Tilde{F}}_2(t)$ będą zmiennymi niezależnymi.
+\end{enumerate}
+
+\subsection{Ciągłość}
+Zapiszmy zatem warunki ciągłości 
+\begin{align}
+    a_2^{(\mathrm{C})}(t) (x_{\mathrm{(C)}} - p^{\mathrm{(C)}})^2 + q^{\mathrm{(C)}}
+    =
+    a_2^{(\mathrm{B})}(t) (x_{\mathrm{(C)}} - p^{\mathrm{(B)}})^2 + q^{\mathrm{(B)}},\\
+    a_2^{(\mathrm{B})}(t) (x_{\mathrm{(T)}} - p^{\mathrm{(B)}})^2 + q^{\mathrm{(B)}}
+    =
+    a_2^{(\mathrm{T})}(t) (x_{\mathrm{(T)}} - p^{\mathrm{(T)}})^2 + q^{\mathrm{(T)}}.    
+\end{align}
+
+
+\end{document}
