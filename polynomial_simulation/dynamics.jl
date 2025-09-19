@@ -6,13 +6,20 @@ a_bar_series = Float64[]
 a_tau_series = Float64[]
 
 
-function update_params(canonical::ParabolaParams, barrier::ParabolaParams, tautomerical::ParabolaParams)
+function evolve_canonical(canonical::ParabolaParams, barrier::ParabolaParams, tautomerical::ParabolaParams,
+                          is_gc_base_pair::Bool=true)
     T = 10.
     dt = 0.1
     times = 0:dt:T
+    x_c = is_gc_base_pair ? -1.03 : -0.51
+    x_t = is_gc_base_pair ? 1.15 : 1.21
+
+    can_series, bar_series, tau_series = Float64[], Float64[], Float64[]
+
     canonical = deepcopy(canonical)
-    barrier = deepcopy(barrier)
+    barrier   = deepcopy(barrier)
     tautomerical = deepcopy(tautomerical)
+
     for t in times
         canonical.a += .00005*sin(5*t) 
 
@@ -28,70 +35,75 @@ function update_params(canonical::ParabolaParams, barrier::ParabolaParams, tauto
         y_t = barrier.a * (x_t - barrier.p)^2 + barrier.q
         tautomerical.q = y_t - tautomerical.a * (x_t - tautomerical.p)^2
 
-        push!(a_can_series, canonical.a)
-        push!(a_bar_series, barrier.a)
-        push!(a_tau_series, tautomerical.a)
-
-        y_can = canonical.a * (x_c - canonical.p)^2 + canonical.q
-        y_bar = barrier.a * (x_c - barrier.p)^2 + barrier.q
-        y_bar_2 = barrier.a * (x_t - barrier.p)^2 + barrier.q
-        y_tau = tautomerical.a * (x_t - tautomerical.p)^2 + tautomerical.q   
-
-        println(abs(y_can - y_bar)) 
-        println(abs(y_tau - y_bar_2))
-
+        push!(can_series, canonical.a)
+        push!(bar_series, barrier.a)
+        push!(tau_series, tautomerical.a)
 
     end
-    return canonical, barrier, tautomerical
+    return can_series, bar_series, tau_series
 end
 
 
 ## Three Independent Parabola
-function get_xc(parabola1::ParabolaParams, parabola2::ParabolaParams)
+function get_xc(parabola1::ParabolaParams, parabola2::ParabolaParams, is_gc_base_pair::Bool=true)
+    max_iters = 1000
+    iter = 0
     A = parabola1.a - parabola2.a
     B = 2 * (parabola2.a * parabola2.p - parabola1.a * parabola1.p)
     C = parabola1.q - parabola2.q + parabola1.a * parabola1.p^2 - parabola2.a * parabola2.p^2
     D = B^2 - 4*A*C
+    while true
+        A = parabola1.a - parabola2.a
+        B = 2 * (parabola2.a * parabola2.p - parabola1.a * parabola1.p)
+        C = parabola1.q - parabola2.q + parabola1.a * parabola1.p^2 - parabola2.a * parabola2.p^2
+        D = B^2 - 4*A*C
 
-    if D < 0
-        return nothing   # no real intersection
+        if D >= 0 || iter >= max_iters
+            break
+        end
+        println(D)
+        parabola1.a -= 0.00001 
+        iter +=1
+
     end
 
+    if iter == max_iters # still no real intersection
+        return nothing
+    end
     x1 = (-B + sqrt(D)) / (2*A)
     x2 = (-B - sqrt(D)) / (2*A)
 
     # pick the physically relevant one 
-    return x1 < x2 ? x1 : x2
+    if is_gc_base_pair
+        return x1 > x2 ? x1 : x2
+    else
+        return x1 < x2 ? x1 : x2
+    end
 end
 
-function update_params_independent(canonical::ParabolaParams, barrier::ParabolaParams, 
-    tautomerical::ParabolaParams, is_gc_base_pair::Bool = true)
-    T = 10.0
+function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams, 
+    tautomerical_::ParabolaParams, is_gc_base_pair::Bool = true)
+    T = 10.
     dt = 0.1
     times = 0:dt:T
+    a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series = Float64[], Float64[], Float64[], Float64[], Float64[]
 
-    empty!(a_can_series)
-    empty!(a_bar_series)
-    empty!(a_tau_series)
-
-    canonical = deepcopy(canonical)
-    barrier = deepcopy(barrier)
-    tautomerical = deepcopy(tautomerical)
-
-    global x_c, x_t
+    canonical = deepcopy(canonical_)
+    barrier = deepcopy(barrier_)
+    tautomerical = deepcopy(tautomerical_)
 
     for t in times
         # IMPORTANT: changing the paramaters may alter the continuity and the ability of finding real x_c and x_t
         if is_gc_base_pair
-            canonical.a    += .00005 * sin(5*t) 
-            barrier.a      += .00006 * sin(4*t + .89)
-            tautomerical.a += .00002 * sin(1.5*t + 2.0)
-        else    
-            canonical.a    += .00005 * sin(5*t) 
-            barrier.a      += .00006 * sin(3*t + 0.2)
-            tautomerical.a += .00002 * sin(1.5*t + 2.0)
-        end
-
+            canonical.a    += .00008 * sin(5*t) 
+            barrier.a      -= .00001 * sin(4.5*t+1.4)
+            tautomerical.a += .00001 * sin(1.5*t + 2.0)
+            else    
+                canonical.a    += .00005 * sin(5*t) 
+                barrier.a      += .00006 * sin(3*t + 0.2)
+                tautomerical.a += .00002 * sin(1.5*t + 2.0)
+            end
+            
         canonical.p, canonical.q = get_pq_params(
             GeneralParabolaParams(canonical.a, canonical.b, canonical.c)
         )
@@ -103,8 +115,8 @@ function update_params_independent(canonical::ParabolaParams, barrier::ParabolaP
         )
 
         # recompute moving junctions (cannot be imaginary)
-        x_c = get_xc(canonical, barrier)
-        x_t = get_xc(barrier, tautomerical)
+        x_c = get_xc(canonical, barrier, is_gc_base_pair)
+        x_t = get_xc(barrier, tautomerical, is_gc_base_pair)
 
         if x_c !== nothing
             y_can = canonical.a * (x_c - canonical.p)^2 + canonical.q
@@ -125,71 +137,13 @@ function update_params_independent(canonical::ParabolaParams, barrier::ParabolaP
         push!(a_can_series, canonical.a)
         push!(a_bar_series, barrier.a)
         push!(a_tau_series, tautomerical.a)
+        push!(x_c_series, x_c)
+        push!(x_t_series, x_t)
+        
     end
-    return canonical, barrier, tautomerical
+    return a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series
 end
 
 
-# "Canonical-driven evolution (barrier and tau depend on canonical)."
-# function evolve_canonical(canonical::ParabolaParams, barrier::ParabolaParams, tau::ParabolaParams;
-#                           T=10.0, dt=0.1, x_c=-1.0, x_t=1.0)
-#     times = 0:dt:T
-#     can_series, bar_series, tau_series = Float64[], Float64[], Float64[]
-
-#     canonical = deepcopy(canonical)
-#     barrier   = deepcopy(barrier)
-#     tau       = deepcopy(tau)
-
-#     for t in times
-#         canonical.a += 0.00005 * sin(5t)
-#         canonical.p, canonical.q = get_pq_params(GeneralParabolaParams(canonical.a, canonical.b, canonical.c))
-
-#         barrier.a = continuity_error(canonical, barrier, x_c) # or barrier_coefficient if you keep it
-#         y_c = canonical.a*(x_c-canonical.p)^2 + canonical.q
-#         barrier.q = y_c - barrier.a*(x_c - barrier.p)^2
-
-#         tau.a = continuity_error(barrier, tau, x_t) # or tau_coefficient
-#         y_t = barrier.a*(x_t-barrier.p)^2 + barrier.q
-#         tau.q = y_t - tau.a*(x_t - tau.p)^2
-
-#         push!(can_series, canonical.a)
-#         push!(bar_series, barrier.a)
-#         push!(tau_series, tau.a)
-#     end
-
-#     return can_series, bar_series, tau_series
-# end
 
 
-# "Independent evolution: each parabola wiggles on its own."
-# function evolve_independent(canonical::ParabolaParams, barrier::ParabolaParams, tau::ParabolaParams;
-#                             T=10.0, dt=0.1, is_gc_base_pair=true)
-#     times = 0:dt:T
-#     can_series, bar_series, tau_series = Float64[], Float64[], Float64[]
-
-#     canonical = deepcopy(canonical)
-#     barrier   = deepcopy(barrier)
-#     tau       = deepcopy(tau)
-
-#     for t in times
-#         if is_gc_base_pair
-#             canonical.a    += 0.00005 * sin(5t)
-#             barrier.a      += 0.00006 * sin(4t + 0.89)
-#             tau.a          += 0.00002 * sin(1.5t + 2.0)
-#         else
-#             canonical.a    += 0.00005 * sin(5t)
-#             barrier.a      += 0.00006 * sin(3t + 0.2)
-#             tau.a          += 0.00002 * sin(1.5t + 2.0)
-#         end
-
-#         canonical.p, canonical.q = get_pq_params(GeneralParabolaParams(canonical.a, canonical.b, canonical.c))
-#         barrier.p, barrier.q     = get_pq_params(GeneralParabolaParams(barrier.a, barrier.b, barrier.c))
-#         tau.p, tau.q             = get_pq_params(GeneralParabolaParams(tau.a, tau.b, tau.c))
-
-#         push!(can_series, canonical.a)
-#         push!(bar_series, barrier.a)
-#         push!(tau_series, tau.a)
-#     end
-
-#     return can_series, bar_series, tau_series
-# end
