@@ -18,12 +18,11 @@ canonical, barrier, tautomerical = create_params_struct(
 
 x_c, x_t = -1.03, 1.15
 
-## ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
-can, bar, tau = evolve_canonical(canonical, barrier, tautomerical)
-make_gif_from_series(can, bar, tau, "graphics/parabolas_gc.gif")
+# ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
+# can, bar, tau = evolve_canonical(canonical, barrier, tautomerical)
+# make_gif_from_series(can, bar, tau, "graphics/parabolas_gc.gif")
 
-## CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
-
+# CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical)
 make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, "graphics/parabolas_independent_gc.gif")
 
@@ -39,12 +38,11 @@ canonical, barrier, tautomerical = create_params_struct(
 )
 x_c, x_t = -0.51, 1.21
 
-## ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
+# ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
+# can, bar, tau = evolve_canonical(canonical, barrier, tautomerical, false)
+# make_gif_from_series(can, bar, tau, "graphics/parabolas_at.gif", false)
 
-can, bar, tau = evolve_canonical(canonical, barrier, tautomerical, false)
-make_gif_from_series(can, bar, tau, "graphics/parabolas_at.gif", false)
-
-## CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
+# CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
 
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical, false)
 make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, "graphics/parabolas_independent_at.gif", is_gc_base_pair=false)

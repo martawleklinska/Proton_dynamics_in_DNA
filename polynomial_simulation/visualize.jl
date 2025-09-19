@@ -92,7 +92,7 @@ function make_gif_independent_series(a_can_series, a_bar_series, a_tau_series, x
         xs_bar = Observable(LinRange(-1.03, 1.15, 100))
         xs_tau = Observable(LinRange(1.15, 2.7, 100))
     else
-        CairoMakie.ylims!(ax, -0.001, 0.06)
+        CairoMakie.ylims!(ax, -0.001, 0.04)
         xs_can = Observable(LinRange(-3.7, -0.51, 100))
         xs_bar = Observable(LinRange(-0.51, 1.21, 100))
         xs_tau = Observable(LinRange(1.21, 4., 100))
