@@ -1,5 +1,5 @@
 include("utils.jl")
-
+using DelimitedFiles
 
 a_can_series = Float64[]
 a_bar_series = Float64[]
@@ -87,7 +87,8 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
     dt = 0.1
     times = 0:dt:T
     a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series = Float64[], Float64[], Float64[], Float64[], Float64[]
-
+    L_series, R_series = Float64[], Float64[]
+    
     canonical = deepcopy(canonical_)
     barrier = deepcopy(barrier_)
     tautomerical = deepcopy(tautomerical_)
@@ -139,9 +140,21 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
         push!(a_tau_series, tautomerical.a)
         push!(x_c_series, x_c)
         push!(x_t_series, x_t)
-        
+        L = sqrt(2 * canonical.a * 1836)
+        R = sqrt(2 * tautomerical.a * 1836)
+        push!(L_series, L)
+        push!(R_series, R)
     end
-    return a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series
+
+    if is_gc_base_pair
+        writedlm("data/L_series_gc.txt", L_series)
+        writedlm("data/R_series_gc.txt", R_series)
+    else
+        writedlm("data/L_series_at.txt", L_series)
+        writedlm("data/R_series_at.txt", R_series)
+    end
+
+    return a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series, L_series, R_series
 end
 
 
