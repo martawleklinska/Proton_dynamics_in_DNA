@@ -38,7 +38,7 @@ end
 
 # getting WDF from the time-varying potential
 dL, dR = -1.968, 1.968
-using JLD2
+
 function compute_WDF_for_time_varying_potential(x_vals::Vector{Float64}, p_vals::Vector{Float64}, 
     L_series::Vector{Float64}, R_series::Vector{Float64},
     n::Int64, k::Int64; title = "gc")
@@ -50,29 +50,7 @@ function compute_WDF_for_time_varying_potential(x_vals::Vector{Float64}, p_vals:
         WDF_series[:, :, i] .= compute_WDF_map(x_vals, p_vals, dL, dR, L_series[i], R, n=n, k=k)
     end
 
-    # save as .jld2 instead of txt
-    @save "data/WDF_series_$title.jld2" WDF_series
-    # return WDF_series
+    # writedlm("data/WDF_series_$title.txt", reshape(WDF_series, nx*np, nframes))
+    return WDF_series
 end
 
-## =================== A-T base pair ==================
-x_vals = LinRange(-3.5, 3, 100)
-x_vals = collect(x_vals)
-p_vals = LinRange(-12, 12, 100)
-p_vals = collect(p_vals)
-
-L_series = readdlm("data/L_series_at.txt") |> vec
-R_series = readdlm("data/R_series_at.txt") |> vec
-
-compute_WDF_for_time_varying_potential(x_vals, p_vals, L_series, R_series, 7, 1, title = "at")
-
-## =================== G-C base pair ==================
-x_vals = LinRange(-4.5, 2.7, 100)
-x_vals = collect(x_vals)
-p_vals = LinRange(-12, 12, 100)
-p_vals = collect(p_vals)
-
-L_series = readdlm("data/L_series_gc.txt") |> vec
-R_series = readdlm("data/R_series_gc.txt") |> vec
-
-compute_WDF_for_time_varying_potential(x_vals, p_vals, L_series, R_series, 7, 1, title = "gc")
