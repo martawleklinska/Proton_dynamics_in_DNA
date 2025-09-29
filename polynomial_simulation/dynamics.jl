@@ -77,7 +77,7 @@ function get_xc(parabola1::ParabolaParams, parabola2::ParabolaParams, is_gc_base
     if is_gc_base_pair
         return x1 > x2 ? x1 : x2
     else
-        return x1 < x2 ? x1 : x2
+        return x1 > x2 ? x1 : x2
     end
 end
 

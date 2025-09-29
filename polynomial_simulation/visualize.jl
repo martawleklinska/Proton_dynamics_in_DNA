@@ -78,12 +78,17 @@ end
 
 ## Three
 
-function make_gif_independent_series(a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series, filename::String="parabolas_independent.gif";
+function make_gif_independent_series(a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series, 
+    L_series, R_series, filename::String="parabolas_independent.gif";
      is_gc_base_pair::Bool = true)
+    energies = Observable(L_series[1])
+    energies_r = Observable(R_series[1])
+
     nframes = length(a_can_series)
+    title=is_gc_base_pair ? Observable("GC base pair") : Observable("AT base pair")
 
     fig = Figure(size=(600,400))
-    ax = Axis(fig[1,1]; xlabel=L"$x$", ylabel=L"$y$", title=is_gc_base_pair ? "GC base pair" : "AT base pair")
+    ax = Axis(fig[1,1]; xlabel=L"$x$", ylabel=L"$y$", title=title)
     if is_gc_base_pair
         CairoMakie.ylims!(ax, -0.001, 0.03)
 
@@ -111,11 +116,46 @@ function make_gif_independent_series(a_can_series, a_bar_series, a_tau_series, x
     sc_t = Observable(Point2f(0.0, 0.0))
     CairoMakie.scatter!(ax, sc_c, color=:black, markersize=12)
     CairoMakie.scatter!(ax, sc_t, color=:black, markersize=12)
+    CairoMakie.axislegend(ax; position = :rb, framevisible = false, textsize=15)
+
+    # energies plot 
+    canonical.a = a_can_series[1]
+    tautomerical.a = a_tau_series[1]
+    canonical.p, canonical.q = get_pq_params(
+            GeneralParabolaParams(canonical.a, canonical.b, canonical.c)
+        )
+    tautomerical.p, tautomerical.q = get_pq_params(
+            GeneralParabolaParams(tautomerical.a, tautomerical.b, tautomerical.c)
+        )
+    for i in 0:10
+        y_level = lift(energies) do e
+            e/1836 * (i + 0.5) + canonical.q
+        end
+        x = is_gc_base_pair ? [-2.7, -2.3] : [-1.95, -1.55]
+        lines!(ax, x, lift(y_level) do y
+            [y, y]
+        end, color=:gray, linestyle=:dash)   
+    end
+    for i in 0:3
+        y_level_r = lift(energies_r) do e
+            e/1836 * (i + 0.5) + tautomerical.q
+        end
+        x = is_gc_base_pair ? [1.5, 1.9] : [1.65, 2.05]
+        lines!(ax, x, lift(y_level_r) do y
+            [y, y]
+        end, color=:gray, linestyle=:dash)   
+    end
+
+    #
 
     record(fig, filename, 1:nframes; framerate = 20) do i
         canonical.a = a_can_series[i]
         barrier.a = a_bar_series[i]
         tautomerical.a = a_tau_series[i]
+
+        energies[] = L_series[i]
+        energies_r[] = R_series[i]
+        title[] = is_gc_base_pair ? "GC base pair, t=$(i)" : "AT base pair, t=$(i)"
 
         # update params
         canonical.p, canonical.q = get_pq_params(

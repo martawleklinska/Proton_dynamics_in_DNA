@@ -25,10 +25,13 @@ end
 function make_wdf_gif_from_series(x_vals, p_vals, WDF_series, filename::String="wdf_at.gif", is_gc_base_pair::Bool = false)
     nframes = size(WDF_series, 3)
     data = Observable(WDF_series[:, :, 1])
+    time_obs = Observable("t = 0")
+    title = is_gc_base_pair ? L"\mathrm{WDF\; for\; G-C\; base-pair}" : L"\mathrm{WDF\; for\; A-T\; base-pair}"
+    # title = title + time_obs[]
     fig = Figure(resolution = (800, 600))
     ax = Axis(fig[1, 1],
         xlabel = L"$x$", ylabel = L"$p$",
-        title = is_gc_base_pair ? L"\mathrm{WDF\; for\; G-C\; base-pair}" : L"\mathrm{WDF\; for\; A-T\; base-pair}",
+        title = time_obs,
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
         xticklabelsize = 20, yticklabelsize = 20)
     hm = CairoMakie.heatmap!(ax, x_vals, p_vals, data, colormap = :seismic, colorrange = (-0.3, 0.3))
@@ -36,6 +39,7 @@ function make_wdf_gif_from_series(x_vals, p_vals, WDF_series, filename::String="
 
     record(fig, filename, 1:nframes; framerate = 20) do i
         data[] = WDF_series[:, :, i]
+        time_obs[] = "t = $(i)"  
     end
 end
 
