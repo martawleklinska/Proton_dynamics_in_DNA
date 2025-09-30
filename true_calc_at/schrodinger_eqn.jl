@@ -96,4 +96,4 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01)
 end
 
 ene, wf, x = solve_schrodinger_fourth(12, 1000, (-3.5, 3.0))
-plot_solutions(ene, wf, x; scale=0.001)
+# plot_solutions(ene, wf, x; scale=0.001)
