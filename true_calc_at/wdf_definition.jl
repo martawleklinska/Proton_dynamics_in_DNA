@@ -51,20 +51,22 @@ function fftshift(v::AbstractVector)
 end
 
 
-function get_wdf_map_at(idx_of_can_state::Int64 = 6, idx_of_tau_state::Int64 = 7)
-    ψ0 = wf[:, idx_of_can_state]  
-    ψ1 = wf[:, idx_of_tau_state]  
-
+function get_wdf_map(idx_of_can_state::Int64 = 6, idx_of_tau_state::Int64 = 7, is_at::Bool = true)
+    ψ0 = is_at ? wf_at[:, idx_of_can_state] : wf_gc[:, idx_of_can_state]
+    ψ1 = is_at ? wf_at[:, idx_of_tau_state] : wf_gc[:, idx_of_tau_state]  
+    x = is_at ? x_at : x_gc
     W, xout, p = compute_discrete_wdf(ψ0, x)
     W7, _, _ = compute_discrete_wdf(ψ1, x)
     W = W + W7
     fig = Figure(resolution=(700,500))
-    ax = Axis(fig[1,1], xlabel=L"$x$ (a.u.)", ylabel=L"$p$ (a.u.)", title=L"\text{WDF 5$\rightarrow$0 (A-T)}", 
-        limits = ((-3.2, 3.), (-12, 12)), ylabelsize = 30, xlabelsize = 30, titlesize = 30,
+    title = is_at ? "wdf_at_godbeer" : "wdf_gc_slocombe" 
+    ax = Axis(fig[1,1], xlabel=L"$x$ (a.u.)", ylabel=L"$p$ (a.u.)", title=is_at ? L"\text{WDF 5$\rightarrow$0 (A-T)}" : L"\text{WDF 5$\rightarrow$0 (G-C)}", 
+        limits = is_at ? ((-3.2, 3.), (-12, 12)) : ((-4., 2.7), (-12, 12)), ylabelsize = 30, xlabelsize = 30, titlesize = 30,
             xticklabelsize = 20, yticklabelsize = 20)
     hm = CairoMakie.heatmap!(ax, xout, p, W, colormap = :seismic, colorrange = (-0.3, 0.3))
     CairoMakie.Colorbar(fig[1,2], hm, label = L"\varrho(x,\; p; \; t)", labelsize = 30, ticklabelsize = 20)
-    save("graphics/wdf_at_godbeer.pdf", fig)
+    save("graphics/$title.pdf", fig)
 end
 
-get_wdf_map_at(6, 7)
+get_wdf_map(6, 7)
+get_wdf_map(6, 7, false)

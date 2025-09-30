@@ -13,9 +13,28 @@ function fourth_order(v)
     return a4*x.^4 + a3*x.^3 + a2*x.^2 + a1*x + a0
 end
 
+function morse(V1, V2, a1, a2, q, r1, r2)
+    exp1 = exp(-2 * a1 * (q - r1))
+    exp2 = exp(-a1 * (q - r1))
+    exp3 = exp(-2 * a2 * (r2 - q))
+    exp4 = exp(-a2 * (r2 - q))
+    output = V1 * (exp1 - 2 * exp2) + V2 * (exp3 - 2 * exp4) + 0.166 + 0.00019
+    return output
+end
+function double_morse(q)
+    V1 = 0.1617
+    V2 = 0.082
+    a1 = 0.305
+    a2 = 0.755
+    r1 = -2.7
+    r2 = 2.1
+    output = morse(V1, V2, a1, a2, q, r1, r2)
+    return output
+end
 
-function get_potential(x)
-    return fourth_order.(x)
+
+function get_potential(x; is_at=true)
+    return is_at ? fourth_order.(x) : double_morse.(x)
 end
 
 """ 
@@ -26,7 +45,8 @@ TISE with FD returns: energies, wavefunctions, x
     xlims: (xmin, xmax)
 
 """
-function solve_schrodinger_fourth(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float64, Float64}=(-3.5, 3.0))
+function solve_schrodinger(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float64, Float64}=(-3.5, 3.0),
+                            is_at::Bool=true)
     xmin, xmax = xlims
     x = range(xmin, stop = xmax, length = n)
     dx = step(x)
@@ -37,7 +57,7 @@ function solve_schrodinger_fourth(nstates::Int64=10, n::Int64=1000, xlims::Tuple
 
     T = spdiagm(-1 => off, 0 => main, 1 => off)
 
-    V_diag = get_potential(collect(x))
+    V_diag = get_potential(collect(x), is_at = is_at)
     V_diag .-= minimum(V_diag)  
     V = spdiagm(0 => V_diag)
 
@@ -63,23 +83,20 @@ function solve_schrodinger_fourth(nstates::Int64=10, n::Int64=1000, xlims::Tuple
     return energies, wavefuncs, x
 end
 
-ene, wf, x = solve_schrodinger_fourth(4, 1000, (-3.5, 3.0))
-println("Lowest energies a.u.:")
-println(ene)
 
 ##
 
-function plot_solutions(ene, wavefuncs, x; scale=0.01)
-    V = get_potential(x)
+function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
+    V = get_potential(x, is_at = is_at)
     
     fig = Figure(resolution = (800, 600))
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
-        title = L"\text{A-T}",
-        limits = ((-3.2, 3.0), (-0.005, 0.045)),
+        title = is_at ? L"\text{A-T}" : L"\text{G-C}",
+        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.035)),
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
         xticklabelsize = 20, yticklabelsize = 20)
     ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=30,
-        yticklabelsize = 20, yaxisposition = :right, limits = ((-3.2, 3.0), (-1.2, 1.2)))
+        yticklabelsize = 20, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
     hidespines!(ax_wf)
     hidexdecorations!(ax_wf)
     cm = cgrad(:tab20c, 13)
@@ -92,8 +109,13 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01)
     end
 
     # display(fig)
-    save("graphics/fourth_order_wave_funcs_AT.pdf", fig)
+    filename = is_at ? "fourth_order_wave_funcs_AT" : "morse_wave_funcs_GC"
+    save("graphics/$filename.pdf", fig)
 end
 
-ene, wf, x = solve_schrodinger_fourth(12, 1000, (-3.5, 3.0))
-# plot_solutions(ene, wf, x; scale=0.001)
+ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
+plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+
+## g-C
+ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)
+plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
