@@ -1,41 +1,7 @@
 using LinearAlgebra, SparseArrays
 # using Arpack
-# using Plots
 using CairoMakie
 
-function func_Godbeer_natural(v)
-    e_natural = -4464.49 + 4465.3377
-    d_natural = 0.429
-    c_natural = -1.126
-    b_natural = -0.143
-    a_natural = 0.563
-    output = (
-        d_natural * v
-        + c_natural * v.^2
-        + b_natural * v.^3
-        + a_natural * v.^4
-        + e_natural
-    )  # Added the last term for the energy to be 0
-    return output * 8065.73
-end
-
-cm_to_Hartree = 1 / 219474.6313705
-
-function func_Godbeer_hartree(v)
-    energy_cm_inv = func_Godbeer_natural(v)
-    energy_hartree = energy_cm_inv * cm_to_Hartree
-    return energy_hartree
-end
-
-"""
-maciej params
-\alpha & 1.963 \\
-a_4 & 0.0207 \\
-a_3 & -0.0053 \\
-a_2 & -0.0414 \\
-a_1 & 0.0158 \\
-a_0 & 0.0312 \\
-"""
 function fourth_order(v)
     alpha = 1.963
     x = v/alpha
@@ -72,9 +38,8 @@ function solve_schrodinger_fourth(nstates::Int64=10, n::Int64=1000, xlims::Tuple
     T = spdiagm(-1 => off, 0 => main, 1 => off)
 
     V_diag = get_potential(collect(x))
-    V_diag .-= minimum(V_diag)   # shift so min(V) = 0
+    V_diag .-= minimum(V_diag)  
     V = spdiagm(0 => V_diag)
-
 
     H = T + V
 
@@ -110,7 +75,7 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01)
     fig = Figure(resolution = (800, 600))
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
         title = L"\text{A-T}",
-        limits = ((-3.2, 3.0), (-0.005, 0.05)),
+        limits = ((-3.2, 3.0), (-0.005, 0.045)),
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
         xticklabelsize = 20, yticklabelsize = 20)
     ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=30,
@@ -118,7 +83,7 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01)
     hidespines!(ax_wf)
     hidexdecorations!(ax_wf)
     cm = cgrad(:tab20c, 13)
-    CairoMakie.plot!(ax, x, V, color = cm[1])
+    CairoMakie.lines!(ax, x, V, linewidth = 2.5, color = cm[1])
 
     for (i, E) in enumerate(ene)
         ψ = wavefuncs[:, i]
