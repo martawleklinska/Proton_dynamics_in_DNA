@@ -65,7 +65,7 @@ function get_wdf_map(idx_of_can_state::Int64 = 6, idx_of_tau_state::Int64 = 7, i
             xticklabelsize = 20, yticklabelsize = 20)
     hm = CairoMakie.heatmap!(ax, xout, p, W, colormap = :seismic, colorrange = (-0.3, 0.3))
     CairoMakie.Colorbar(fig[1,2], hm, label = L"\varrho(x,\; p; \; t)", labelsize = 30, ticklabelsize = 20)
-    save("graphics/$title.pdf", fig)
+    save("graphics/true_sim/$title.pdf", fig)
 end
 
 get_wdf_map(6, 7)

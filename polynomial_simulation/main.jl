@@ -26,7 +26,7 @@ x_c, x_t = -1.03, 1.15
 L_series = readdlm("data/L_series_gc.txt") |> vec
 R_series = readdlm("data/R_series_gc.txt") |> vec
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical)
-make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/parabolas_independent_gc.gif")
+make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_gc.gif")
 
 ## =================== A-T base pair ==================
 a_can, b_can, c_can = 0.01548757014342916, 0.0544195348802887, 0.04817678375503837
@@ -49,5 +49,5 @@ L_series = readdlm("data/L_series_at.txt") |> vec
 R_series = readdlm("data/R_series_at.txt") |> vec
 
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical, false)
-make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/parabolas_independent_at.gif", is_gc_base_pair=false)
+make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_at.gif", is_gc_base_pair=false)
 
