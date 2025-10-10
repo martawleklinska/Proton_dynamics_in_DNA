@@ -51,3 +51,13 @@ R_series = readdlm("data/R_series_at.txt") |> vec
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical, false)
 make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_at.gif", is_gc_base_pair=false)
 
+## hermite approximation
+include("hermite.jl")
+
+# A-T:
+plot_analytical_expansion()
+plot_hermite_expansion(false, 10)
+
+#
+println(are_functions_close(false, 10))
+println(are_functions_close())
