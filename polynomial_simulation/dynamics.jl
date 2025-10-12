@@ -83,8 +83,8 @@ end
 
 function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams, 
     tautomerical_::ParabolaParams, is_gc_base_pair::Bool = true)
-    T = 10.
-    dt = 0.1
+    T = 10000
+    dt = 100.
     times = 0:dt:T
     a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series = Float64[], Float64[], Float64[], Float64[], Float64[]
     L_series, R_series = Float64[], Float64[]
@@ -96,14 +96,17 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
     for t in times
         # IMPORTANT: changing the paramaters may alter the continuity and the ability of finding real x_c and x_t
         if is_gc_base_pair
-            canonical.a    += .00008 * sin(5*t) 
-            barrier.a      -= .00001 * sin(4.5*t+1.4)
-            tautomerical.a += .00001 * sin(1.5*t + 2.0)
-            else    
-                canonical.a    += .00005 * sin(5*t) 
-                barrier.a      += .00006 * sin(3*t + 0.2)
-                tautomerical.a += .00002 * sin(1.5*t + 2.0)
-            end
+            # canonical.a    += .00008 * sin(5*t) 
+            # barrier.a      -= .00001 * sin(4.5*t+1.4)
+            # tautomerical.a += .00001 * sin(1.5*t + 2.0)
+            canonical.a    += 0.00021349044066346842 * sin(0.00095*t) 
+            barrier.a      -= .00000075 * sin(0.0008*t+1.4)
+            tautomerical.a -= .000001 * sin(0.0005*t + 2.0)
+        else    
+            canonical.a    += .00005 * sin(5*t) 
+            barrier.a      += .00006 * sin(3*t + 0.2)
+            tautomerical.a += .00002 * sin(1.5*t + 2.0)
+        end
             
         canonical.p, canonical.q = get_pq_params(
             GeneralParabolaParams(canonical.a, canonical.b, canonical.c)
@@ -140,8 +143,8 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
         push!(a_tau_series, tautomerical.a)
         push!(x_c_series, x_c)
         push!(x_t_series, x_t)
-        L = sqrt(2 * canonical.a * 1836)
-        R = sqrt(2 * tautomerical.a * 1836)
+        L = sqrt(abs(2 * canonical.a * 1836))
+        R = sqrt(abs(2 * tautomerical.a * 1836))
         push!(L_series, L)
         push!(R_series, R)
     end
