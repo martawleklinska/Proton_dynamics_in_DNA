@@ -38,9 +38,8 @@ TISE with FD returns: energies, wavefunctions, x
     nstates: n/o of lowest eigenstates
     n: grid plot_at_instance
     xlims: (xmin, xmax)
-
 """
-function solve_schrodinger(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float64, Float64}=(-3.5, 3.0),
+function solve_schrodinger_sum_harmonic(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float64, Float64}=(-3.5, 3.0),
                             is_at::Bool=true)
     xmin, xmax = xlims
     x = range(xmin, stop = xmax, length = n)
@@ -79,15 +78,61 @@ function solve_schrodinger(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float6
 end
 
 
-#
+include("hermite.jl")
 
-function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
-    V = get_potential(x, is_at = is_at)
+function get_wavefunctions_qho(x_range, n::Int, k::Int; is_at::Bool = true)
+    a_can = is_at ? 0.01548757014342916 : 0.006457467585167605
+    a_tau = is_at ? 0.0125386460155263 : 0.013406834311699567
+
+    mass = 1836
+    # 1/2 m ω^2=a-> mω=√2a/m * m=√2am
+    dL = is_at ? -1.7737 : -2.42442
+    dR = is_at ? 1.8963 : 1.787
+    L = sqrt(a_can * mass)
+    R = sqrt(a_tau * mass)
     
+    left_wave_func = Matrix{Float64}(undef, length(x_range), n)
+    right_wave_func = Matrix{Float64}(undef, length(x_range), k)
+    
+    for i in 1:n
+        for (j, x) in enumerate(x_range)
+            left_wave_func[j, i] = (2^(i-1) * factorial(i-1))^(-1/2) * (L^2/π)^(1/4) * 
+                                   exp(-L^2 * (x - dL)^2/2) * eval_hermite(i-1, sqrt(L^2) * (x - dL))
+        end
+    end
+    
+    for i in 1:k
+        for (j, x) in enumerate(x_range)
+            right_wave_func[j, i] = (2^(i-1) * factorial(i-1))^(-1/2) * (R^2/π)^(1/4) * 
+                                    exp(-R^2 * (x - dR)^2/2) * eval_hermite(i-1, sqrt(R^2) * (x - dR))
+        end
+    end
+    
+    energies_left = Vector{Float64}(undef, n)
+    energies_right = Vector{Float64}(undef, k)
+    ene_tau = is_at ? 0.021 : 0.0158
+    
+    for i in 1:n
+        energies_left[i] = L/mass * ((i-1) + 0.5)
+    end
+    for i in 1:k 
+        energies_right[i] = R/mass * ((i-1) + 0.5) + ene_tau
+    end
+    
+    return left_wave_func, right_wave_func, energies_left, energies_right
+end
+
+##
+function plot_harmonic_solutions(scale=0.001, is_at::Bool = true)
+    x = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
+    left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
+    V = get_potential(x, is_at = is_at)
+
     fig = Figure(resolution = (800, 600))
+
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
         title = is_at ? L"\text{A-T: harmonic model}" : L"\text{G-C: harmonic model}",
-        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.035)),
+        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.032)),
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
         xticklabelsize = 20, yticklabelsize = 20)
     ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=30,
@@ -95,12 +140,20 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     hidespines!(ax_wf)
     hidexdecorations!(ax_wf)
     cm = cgrad(:tab20c, 13)
-    CairoMakie.lines!(ax, x, V, linewidth = 2.5, color = cm[1])
-
-    for (i, E) in enumerate(ene)
-        ψ = wavefuncs[:, i]
+    CairoMakie.lines!(ax, x, V, linewidth = 3.5, color = cm[1])
+    
+    cm = cgrad(:YlGnBu, 13)
+    for (i, E) in enumerate(ene_left)
+        ψ = left_wf[:, i]
         CairoMakie.lines!(ax, x, E .+ ψ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
-        CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1]) 
+        CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
+    end
+    
+    cm = cgrad(:PuRd, 5)
+    for (i, E) in enumerate(ene_right)
+        ψ = right_wf[:, i]
+        CairoMakie.lines!(ax, x, E .+ ψ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
+        CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
     end
 
     # display(fig)
@@ -108,9 +161,53 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     save("graphics/model/$filename.pdf", fig)
 end
 
-ene_at, wf_at, x_at = solve_schrodinger(13, 1000, (-3.5, 3.), true)
-plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
+    x = is_at ? LinRange(-3.0, 3.0, 300) : LinRange(-4.0, 2.9, 300)
+    left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
+    V = get_potential(x, is_at = is_at)
 
-## g-C
-ene_gc, wf_gc, x_gc = solve_schrodinger(14, 1000, (-4., 2.9), false)
-plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
+    fig = Figure(resolution = (800, 600))
+
+    ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
+        title = is_at ? L"\text{A-T: harmonic model}" : L"\text{G-C: harmonic model}",
+        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.032)),
+        ylabelsize = 30, xlabelsize = 30, titlesize = 30,
+        xticklabelsize = 20, yticklabelsize = 20)
+    ax_wf = Axis(fig[1, 1], ylabel = L"|ψ(x)|^2 \text{ (arb. u.)}", ylabelsize=30,
+        yticklabelsize = 20, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
+    hidespines!(ax_wf)
+    hidexdecorations!(ax_wf)
+    cm = cgrad(:tab20c, 13)
+    CairoMakie.lines!(ax, x, V, linewidth = 3.5, color = cm[1])
+    
+    cm = cgrad(:YlGnBu, 13)
+    for (i, E) in enumerate(ene_left)
+        ψ = left_wf[:, i]
+        ρ = conj(ψ) .*ψ
+        CairoMakie.lines!(ax, x, E .+ ρ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
+        CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
+    end
+    
+    cm = cgrad(:PuRd, 5)
+    for (i, E) in enumerate(ene_right)
+        ψ = right_wf[:, i]
+        ρ = conj(ψ) .*ψ
+        CairoMakie.lines!(ax, x, E .+ ρ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
+        CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
+    end
+
+    display(fig)
+    # filename = is_at ? "model_AT_den" : "model_GC_den"
+    # save("graphics/model/$filename.pdf", fig)
+end
+
+# ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
+# plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+
+# ## g-C
+# ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
+# plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
+
+##
+# plot_harmonic_solutions()
+plot_solutions_with_density(0.0007, false)

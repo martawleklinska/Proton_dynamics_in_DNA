@@ -201,13 +201,17 @@ function plot_analytical_expansion(is_at::Bool = true)
     lines!(ax, xs, ys_approx, color=:red, linestyle=:dash, linewidth = 5, label=L"Rozwinięcie $\mathcal{H}_n$ ($n=4$)")
     axislegend(ax, position=:rb, labelsize = 25)
     filename = is_at ? "graphics/model/hermite_expan_g-c.pdf" : "graphics/model/hermite_expan_a-t.pdf" 
-    save(filename, fig) 
-    # fig
+    # save(filename, fig) 
+    fig
 end
 ## test optimization of max_idx
 #(\int_{a}^b dx p(x) (f(x) - w(x))^2)^{1/2}
 # \sum_{i=1}^N (f(x_i) - w(x_i))^2p(xi)
 function are_functions_close(is_at::Bool = true, nmax = 4)
+    """
+    function calculates the proximity of hermite expansion and the extrapolated potential
+        from Slocombe2022 and Godbeer2015 
+    """
     # a_coefs = hermite_coefficients(nmax; is_at=is_at) # numerical
     a_coefs = is_at ? analytic_hermite_coeffs_at() : get_analytical_coefficients_gc(nmax)
     x_range = is_at ? LinRange(-3.0, 3.0, 100) : LinRange(-4.0, 2.7, 100)

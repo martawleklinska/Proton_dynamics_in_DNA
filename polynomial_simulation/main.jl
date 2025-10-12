@@ -20,7 +20,7 @@ x_c, x_t = -1.03, 1.15
 
 # ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
 # can, bar, tau = evolve_canonical(canonical, barrier, tautomerical)
-# make_gif_from_series(can, bar, tau, "graphics/parabolas_gc.gif")
+# make_gif_from_series(can, bar, tau, "graphics/model/parabolas_gc.gif")
 
 # CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
 L_series = readdlm("data/L_series_gc.txt") |> vec
@@ -41,8 +41,8 @@ canonical, barrier, tautomerical = create_params_struct(
 x_c, x_t = -0.51, 1.21
 
 # ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
-# can, bar, tau = evolve_canonical(canonical, barrier, tautomerical, false)
-# make_gif_from_series(can, bar, tau, "graphics/parabolas_at.gif", false)
+can, bar, tau = evolve_canonical(canonical, barrier, tautomerical, false)
+make_gif_from_series(can, bar, tau, "graphics/model/parabolas_at.gif", false)
 
 # CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
 L_series = readdlm("data/L_series_at.txt") |> vec
@@ -54,10 +54,50 @@ make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_s
 ## hermite approximation
 include("hermite.jl")
 
-# A-T:
+# A-T + G-C
 plot_analytical_expansion()
 plot_hermite_expansion(false, 10)
 
-#
+# calculate the proximity of the hermite polynomial expansion and the Slocombe2022 and Godbeer2015
 println(are_functions_close(false, 10))
 println(are_functions_close())
+
+## calculate the differences betwween energy eigenvalues of harmonic model and extrapolated functions 
+is_at = true
+x_range = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
+_, _, ene_left, ene_right = get_wavefunctions_qho(x_range, 14, 6)
+
+include("../true_calc_at/schrodinger_eqn.jl")
+"""
+g-c: canonical eigenstates: 1-6, 7-11 - naprzemiennie
+a-t: canonical eigenstates: 1-5, 6-11 - naprzemiennie
+"""
+
+energies, _, _ = solve_schrodinger(13)
+println("A-T:energy eigenstates differences")
+for i in 1:11
+    if i < 6
+        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
+    elseif i > 5 && i % 2 == 0 
+        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
+    elseif i > 5 && i % 2 != 0
+        println("(tautomerical diff) n = ", i, "\t", energies[i] - ene_right[i-5])
+    end
+end
+
+## g-c
+is_at = true
+x_range = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
+_, _, ene_left, ene_right = get_wavefunctions_qho(x_range, 14, 6)
+
+energies, _, _ = solve_schrodinger(12, 1000, (-4., 2.9), false)
+println("G-C:energy eigenstates differences")
+for i in 1:12
+    if i < 7
+        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
+    elseif i > 6 && i % 2 == 0 
+        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
+    elseif i > 6 && i % 2 != 0
+        println("(tautomerical diff) n = ", i, "\t", energies[i] - ene_right[i-5])
+    end
+end

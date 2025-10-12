@@ -1,5 +1,5 @@
 using LinearAlgebra, SparseArrays
-# using Arpack
+using Arpack
 using CairoMakie
 
 function fourth_order(v)
@@ -113,9 +113,9 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     save("graphics/true_sim/$filename.pdf", fig)
 end
 
-ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
-plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+# ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
+# plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
 
-## g-C
-ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)
-plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
+# ## g-C
+# ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)
+# plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
