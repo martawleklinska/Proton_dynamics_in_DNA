@@ -76,7 +76,6 @@ function hermite_coefficients(nmax; is_at::Bool = true)
     return a_coefs
 end
 
-
 function hermite_approximation(x, a_coefs)
     s = zero(x)
     for (i, a) in enumerate(a_coefs)

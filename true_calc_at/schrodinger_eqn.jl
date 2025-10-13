@@ -43,7 +43,6 @@ TISE with FD returns: energies, wavefunctions, x
     nstates: n/o of lowest eigenstates
     n: grid plot_at_instance
     xlims: (xmin, xmax)
-
 """
 function solve_schrodinger(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float64, Float64}=(-3.5, 3.0),
                             is_at::Bool=true)

@@ -10,9 +10,9 @@ The project consists of two parts: polynomial derivation and calculation of anal
 
 :soon: Add a third case of time dependency :arrow_right: "breathing of the parabolas" - tip of the parabolas to be time dependent;
 
-:soon: $\omega(t) = \omega + A\sin(\Omega t)$, which means $\hbar \Omega = k_{B}T$, thus $\Omega = \frac{k_B T}{\hbar}$ :arrow_right: how does $\Omega$ translate to thermal energy?
+:heavy_check_mark: $\omega(t) = \omega + A\sin(\Omega t)$, which means $\hbar \Omega = k_{B}T$, thus $\Omega = \frac{k_B T}{\hbar}$ :arrow_right: how does $\Omega$ translate to thermal energy?
 
-:soon: Add time-dependency to potential (true sim) params.
+:heavy_check_mark: Add time-dependency to potential (true sim) params.
 
 :heavy_check_mark: Calculate the Hermite function expansion of the potential functions.
 
