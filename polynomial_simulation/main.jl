@@ -56,11 +56,14 @@ include("hermite.jl")
 
 # A-T + G-C
 plot_analytical_expansion()
-plot_hermite_expansion(false, 10)
+plot_hermite_expansion(false, 2)
 
 # calculate the proximity of the hermite polynomial expansion and the Slocombe2022 and Godbeer2015
 println(are_functions_close(false, 10))
 println(are_functions_close())
+
+println(is_harmonic_approx_close(is_at =true))
+println(is_harmonic_approx_close(is_at = false))
 
 ## calculate the differences betwween energy eigenvalues of harmonic model and extrapolated functions 
 is_at = true

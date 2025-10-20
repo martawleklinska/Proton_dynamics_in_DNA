@@ -223,3 +223,46 @@ function are_functions_close(is_at::Bool = true, nmax = 4)
     return proxi
 end
 
+
+
+function model_at(x)
+    a_can, b_can, c_can = 0.01548757014342916, 0.0544195348802887, 0.04817678375503837
+    a_bar, b_bar, c_bar = -0.010377758242695038, 0.007613726939775605, 0.0310333936186076
+    a_tau, b_tau, c_tau = 0.0125386460155263, -0.04565578211748337, 0.0619375921034291
+    if x < -0.51
+        return a_can .* x .^ 2 + b_can .* x + c_can
+    elseif x < 1.21
+        return a_bar .* x .^ 2 + b_bar .* x + c_bar
+    else 
+        return a_tau .* x .^ 2 + b_tau .* x + c_tau
+    end
+end
+
+function model_gc(x)
+    a_can, b_can, c_can = 0.006457467585167605, 0.03131130708309966, 0.03979932858576989
+    a_bar, b_bar, c_bar = -0.006425438605566449, 0.0038910266591298437, 0.025223914926830745
+    a_tau, b_tau, c_tau = 0.013406834311699567, -0.044575846347551726, 0.05473263795143025
+
+    if x < -1.03
+        return a_can .* x .^ 2 + b_can .* x + c_can
+    elseif x < 1.15
+        return a_bar .* x .^ 2 + b_bar .* x + c_bar
+    else 
+        return a_tau .* x .^ 2 + b_tau .* x + c_tau
+    end
+end
+function get_potential(x; is_at=true)
+    return is_at ? model_at.(x) : model_gc.(x)
+end
+function is_harmonic_approx_close(;is_at::Bool = true)
+    harmonic = x -> get_potential(x, is_at = is_at)
+    potential = is_at ? (x -> fourth_order(x)) : (x -> double_morse(x))
+    x_range = is_at ? LinRange(-3.0, 3.0, 500) : LinRange(-4.0, 2.7, 500)
+    proxi = 0
+    for i in eachindex(x_range)
+        x = x_range[i]
+        proxi += (potential(x) - harmonic(x))^2
+    end
+    return proxi
+end
+

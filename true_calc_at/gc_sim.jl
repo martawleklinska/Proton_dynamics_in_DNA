@@ -15,22 +15,27 @@ end
 function simulate_double_morse(; T=100000, dt=1000)
     times = 0:dt:T
     r2_series = [2.1 + 0.3*sin(0.0001*t) for t in times] 
-    return times, r2_series
+    r1_series = [-2.7 + 0.1 * sin(0.000095 * t + 500) for t in times]
+    V1_series = [0.1617 - 0.004 * sin(0.000095 * t + 500) for t in times]
+    return times, r2_series, r1_series, V1_series
 end
 
 function make_gif_double_morse(; filename="/home/marta/Documents/studia/masters/graphics/true_sim/double_morse.gif")
-    times, r2_series = simulate_double_morse()
-    xs = LinRange(-4, 3, 400)
+    _, r2_series, r1_series, V1_series = simulate_double_morse()
+    xs = LinRange(-6, 4, 400)
     fig = Figure(resolution=(800,600))
-    ax = Axis(fig[1,1], xlabel=L"$x$", ylabel=L"$U(x)$", title=L"\text{Double Morse G-C}", 
-    xlabelsize = 30, ylabelsize = 30, titlesize = 30, xticklabelsize = 20, yticklabelsize = 20)
+    title = Observable("G-C")
+    ax = Axis(fig[1,1], xlabel=L"$x$", ylabel=L"$U(x)$", title=title, 
+            xlabelsize = 30, ylabelsize = 30, titlesize = 30, xticklabelsize = 20, yticklabelsize = 20,
+            limits = ((-5., 3.), (-0.0002, 0.032)))
     lines!(ax, xs, double_morse(xs; r2=2.1), color=:blue)
     CairoMakie.ylims!(ax, -0.002, 0.033)
     ys = Observable(double_morse(xs; r2=2.1))
     lineplot = lines!(ax, xs, ys, color=:red, label="ewolucja w czasie")
     axislegend(ax, position = :rb)
     record(fig, filename, 1:length(r2_series); framerate=20) do i
-        ys[] = double_morse(xs; r2=r2_series[i])
+        ys[] = double_morse(xs; V1 = V1_series[i], r1 = r1_series[i], r2=r2_series[i])
+        title[] = "G-C t = $i"
     end
 end
 

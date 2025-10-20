@@ -210,4 +210,4 @@ end
 
 ##
 # plot_harmonic_solutions()
-plot_solutions_with_density(0.0007, false)
+# plot_solutions_with_density(0.0007, false)
