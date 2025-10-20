@@ -9,7 +9,6 @@ function evolve_at(is_at::Bool = true)
     a_series = Float64[]
     b_series = Float64[]
     for t in times
-        # oscillate the x⁴ coefficient (5th one)
         a_coefs[5] = 0.0207 + 0.005 * sin(0.00095 * t)
         a_coefs[3] = -0.0414 + 0.005 * sin(0.00095 * t + 500)
 

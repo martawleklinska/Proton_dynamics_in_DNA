@@ -8,8 +8,8 @@ a_tau_series = Float64[]
 
 function evolve_canonical(canonical::ParabolaParams, barrier::ParabolaParams, tautomerical::ParabolaParams,
                           is_gc_base_pair::Bool=true)
-    T = 10.
-    dt = 0.1
+    T = 500.
+    dt = 5.0
     times = 0:dt:T
     x_c = is_gc_base_pair ? -1.03 : -0.51
     x_t = is_gc_base_pair ? 1.15 : 1.21
@@ -21,7 +21,8 @@ function evolve_canonical(canonical::ParabolaParams, barrier::ParabolaParams, ta
     tautomerical = deepcopy(tautomerical)
 
     for t in times
-        canonical.a += .00005*sin(5*t) 
+        # frequency to equal thermal excitations: Ω ~ (9.8183 ± 0.1583) 10^{-4} a.u.    
+        canonical.a += 0.000021349044066346842 * sin(9.8183e-04*t) 
 
         canonical.p, canonical.q = get_pq_params(
             GeneralParabolaParams(canonical.a, canonical.b, canonical.c)
@@ -99,13 +100,17 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
             # canonical.a    += .00008 * sin(5*t) 
             # barrier.a      -= .00001 * sin(4.5*t+1.4)
             # tautomerical.a += .00001 * sin(1.5*t + 2.0)
-            canonical.a    += 0.00021349044066346842 * sin(0.00095*t) 
-            barrier.a      -= .00000075 * sin(0.0008*t+1.4)
-            tautomerical.a -= .000001 * sin(0.0005*t + 2.0)
+            # frequency to equal thermal excitations: Ω ~ (9.8183 ± 0.1583) 10^{-4} a.u.
+            canonical.a    += 0.0005 * sin(9.8183e-04*t) 
+            barrier.a      -= 0.0
+            tautomerical.a -= 0.0
         else    
-            canonical.a    += .00005 * sin(5*t) 
-            barrier.a      += .00006 * sin(3*t + 0.2)
-            tautomerical.a += .00002 * sin(1.5*t + 2.0)
+            # canonical.a    += .00005 * sin(5*t) 
+            # barrier.a      += .00006 * sin(3*t + 0.2)
+            # tautomerical.a += .00002 * sin(1.5*t + 2.0)
+            canonical.a    += 0.00005 * sin(9.8183e-04*t) 
+            barrier.a      += 0.0
+            tautomerical.a += 0.0
         end
             
         canonical.p, canonical.q = get_pq_params(

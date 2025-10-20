@@ -28,8 +28,6 @@ function plot_at_instance(canonical::ParabolaParams, barrier::ParabolaParams, ta
     display(fig)
 end
 
-
-
 function make_gif_from_series(a_can_series, a_bar_series, a_tau_series, filename::String="parabolas.gif", is_gc_base_pair::Bool = true)
     nframes = length(a_can_series) 
     xs_can = is_gc_base_pair ? collect(-4.5:0.01:x_c) : collect(-3.7:0.01:x_c)
@@ -37,7 +35,8 @@ function make_gif_from_series(a_can_series, a_bar_series, a_tau_series, filename
     xs_tau = is_gc_base_pair ? collect(x_t:0.01:2.7) : collect(x_t:0.01:4.0) 
     
     fig = Figure(size=(600,400))
-    ax = Axis(fig[1,1]; xlabel=L"$x$", ylabel=L"$y$", title=is_gc_base_pair ? "GC base pair" : "AT base pair")
+    title = Observable(is_gc_base_pair ? "GC base pair" : "AT base pair")
+    ax = Axis(fig[1,1]; xlabel=L"$x$", ylabel=L"$y$", title=title)
     CairoMakie.ylims!(ax, -0.002, 0.04)
 
     ys_can = Observable(xs_can .* 0)
@@ -58,6 +57,7 @@ function make_gif_from_series(a_can_series, a_bar_series, a_tau_series, filename
         canonical.p, canonical.q = get_pq_params(
                 GeneralParabolaParams(canonical.a, canonical.b, canonical.c)
             )
+        title[] = is_gc_base_pair ? "GC base pair, t=$(i)" : "AT base pair, t=$(i)"
 
         barrier.a = a_bar_series[i]
         y_c = canonical.a * (x_c - canonical.p)^2 + canonical.q
@@ -70,7 +70,7 @@ function make_gif_from_series(a_can_series, a_bar_series, a_tau_series, filename
         ys_can[] = [canonical.a*(x-canonical.p)^2 + canonical.q for x in xs_can]
         ys_bar[] = [barrier.a*(x-barrier.p)^2 + barrier.q for x in xs_bar]
         ys_tau[] = [tautomerical.a*(x-tautomerical.p)^2 + tautomerical.q for x in xs_tau]
-        
+
         sc_c[] = Point2f(x_c, y_c)
         sc_t[] = Point2f(x_t, y_t)
     end
@@ -127,7 +127,7 @@ function make_gif_independent_series(a_can_series, a_bar_series, a_tau_series, x
     tautomerical.p, tautomerical.q = get_pq_params(
             GeneralParabolaParams(tautomerical.a, tautomerical.b, tautomerical.c)
         )
-    for i in 0:10
+    for i in 0:15
         y_level = lift(energies) do e
             e/1836 * (i + 0.5) + canonical.q
         end
@@ -194,3 +194,32 @@ function make_gif_independent_series(a_can_series, a_bar_series, a_tau_series, x
 
     end
 end
+
+
+##
+kB_au = 3.1672e-6
+T = 310.0
+kT = kB_au * T   # w a.u.
+
+omega0 = 0.002652221411423876  # a.u.
+Omega = kT      
+
+fraction = 0.05
+# A = fraction * omega0
+A = 0.0005
+adiab = (A * Omega) / (omega0^2)
+
+println("maksymalna wartość A (G-C): ", omega0 - 2 * kB_au * 310)
+kB_au = 3.1672e-6
+T = 310.0
+kT = kB_au * T   # w a.u.
+
+omega0 = 0.004107431246125  # a.u.
+Omega = kT      
+
+fraction = 0.05
+# A = fraction * omega0
+A = 0.0005
+adiab = (A * Omega) / (omega0^2)
+
+println("maksymalna wartość A (A-T): ", omega0 - 2 * kB_au * 310)

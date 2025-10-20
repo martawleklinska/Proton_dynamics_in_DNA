@@ -41,8 +41,8 @@ canonical, barrier, tautomerical = create_params_struct(
 x_c, x_t = -0.51, 1.21
 
 # ONLY CANONICAL TIME DEPENDENCY [X_T AND X_C FIXED]
-can, bar, tau = evolve_canonical(canonical, barrier, tautomerical, false)
-make_gif_from_series(can, bar, tau, "graphics/model/parabolas_at.gif", false)
+# can, bar, tau = evolve_canonical(canonical, barrier, tautomerical, false)
+# make_gif_from_series(can, bar, tau, "graphics/model/parabolas_at.gif", false)
 
 # CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
 L_series = readdlm("data/L_series_at.txt") |> vec
