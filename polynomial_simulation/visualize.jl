@@ -197,29 +197,41 @@ end
 
 
 ##
-kB_au = 3.1672e-6
-T = 310.0
-kT = kB_au * T   # w a.u.
+function what_are_time_coeffs()
+    kB_au = 3.1672e-6
+    T = 310.0
+    kT = kB_au * T   # w a.u.
 
-omega0 = 0.002652221411423876  # a.u.
-Omega = kT      
+    omega0 = 0.002652221411423876  # a.u.
+    Omega = kT      
 
-fraction = 0.05
-# A = fraction * omega0
-A = 0.0005
-adiab = (A * Omega) / (omega0^2)
+    fraction = 0.05
+    # A = fraction * omega0
+    A = 0.0005
+    adiab = (A * Omega) / (omega0^2)
 
-println("maksymalna wartość A (G-C): ", omega0 - 2 * kB_au * 310)
-kB_au = 3.1672e-6
-T = 310.0
-kT = kB_au * T   # w a.u.
+    println("maksymalna wartość A (G-C): ", omega0 - 2 * kB_au * 310)
+    kB_au = 3.1672e-6
+    T = 310.0
+    kT = kB_au * T   # w a.u.
 
-omega0 = 0.004107431246125  # a.u.
-Omega = kT      
+    omega0 = 0.004107431246125  # a.u.
+    Omega = kT      
 
-fraction = 0.05
-# A = fraction * omega0
-A = 0.0005
-adiab = (A * Omega) / (omega0^2)
+    fraction = 0.05
+    # A = fraction * omega0
+    A = 0.0005
+    adiab = (A * Omega) / (omega0^2)
 
-println("maksymalna wartość A (A-T): ", omega0 - 2 * kB_au * 310)
+    println("maksymalna wartość A (A-T): ", omega0 - 2 * kB_au * 310)
+
+    ## tautomerical: GC
+    a = 0.013406834311699567
+    ω_0 = sqrt(2 * a /1836)
+    println("maksymalna wartość A (G-C): ", ω_0 - 2 * kB_au * 310)
+
+    # tautomerical: AT
+    a = 0.0125386460155263
+    ω_0 = sqrt(2 * a /1836)
+    println("maksymalna wartość A (A-T): ", ω_0 - 2 * kB_au * 310)
+end

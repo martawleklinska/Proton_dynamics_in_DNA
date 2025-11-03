@@ -66,11 +66,11 @@ println(is_harmonic_approx_close(is_at =true))
 println(is_harmonic_approx_close(is_at = false))
 
 ## calculate the differences betwween energy eigenvalues of harmonic model and extrapolated functions 
-is_at = true
-x_range = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
-_, _, ene_left, ene_right = get_wavefunctions_qho(x_range, 14, 6)
-
+is_at = false
 include("../true_calc_at/schrodinger_eqn.jl")
+x_range = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
+_, _, ene_left, ene_right = get_wavefunctions_qho(x_range, 17, 13)
+println(ene_left, "\n", ene_right)
 """
 g-c: canonical eigenstates: 1-6, 7-11 - naprzemiennie
 a-t: canonical eigenstates: 1-5, 6-11 - naprzemiennie

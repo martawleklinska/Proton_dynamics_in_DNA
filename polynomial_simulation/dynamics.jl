@@ -84,7 +84,7 @@ end
 
 function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams, 
     tautomerical_::ParabolaParams, is_gc_base_pair::Bool = true)
-    T = 10000
+    T = 20000
     dt = 100.
     times = 0:dt:T
     a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series = Float64[], Float64[], Float64[], Float64[], Float64[]
@@ -94,25 +94,22 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
     barrier = deepcopy(barrier_)
     tautomerical = deepcopy(tautomerical_)
 
+    A = is_gc_base_pair ? 0.000067 : 0.0021 # limitation of the A coefficient (energy levels<>thermal energy) 
+    A_tau = is_gc_base_pair ? 0.0018579056611541696 : 0.0017320978687266177 # same here
+    m = 1836
+    omega0 = sqrt(2 * canonical.a / m)
+    omega0_barrier = sqrt(-2 * barrier.a /m)
+    omega0_tautomer = sqrt(2 * tautomerical.a /m)
+    # !!! frequency to equal thermal excitations: Ω ~ (9.8183 ± 0.1583) 10^{-4} a.u. !!! ============
+    Ω = 9.8183e-04
+
     for t in times
         # IMPORTANT: changing the paramaters may alter the continuity and the ability of finding real x_c and x_t
-        if is_gc_base_pair
-            # canonical.a    += .00008 * sin(5*t) 
-            # barrier.a      -= .00001 * sin(4.5*t+1.4)
-            # tautomerical.a += .00001 * sin(1.5*t + 2.0)
-            # frequency to equal thermal excitations: Ω ~ (9.8183 ± 0.1583) 10^{-4} a.u.
-            canonical.a    += 0.0005 * sin(9.8183e-04*t) 
-            barrier.a      -= 0.0
-            tautomerical.a -= 0.0
-        else    
-            # canonical.a    += .00005 * sin(5*t) 
-            # barrier.a      += .00006 * sin(3*t + 0.2)
-            # tautomerical.a += .00002 * sin(1.5*t + 2.0)
-            canonical.a    += 0.00005 * sin(9.8183e-04*t) 
-            barrier.a      += 0.0
-            tautomerical.a += 0.0
-        end
-            
+        ωt = omega0 + A * sin(Ω * t)
+        canonical.a    = 0.5 * m * ωt^2
+        barrier.a      = -0.5 * m * (omega0_barrier - A * sin(Ω/3 * t+100))^2
+        tautomerical.a = 0.5 * m * (omega0_tautomer + A_tau/50 * sin(Ω/3 * t+100))^2
+
         canonical.p, canonical.q = get_pq_params(
             GeneralParabolaParams(canonical.a, canonical.b, canonical.c)
         )
@@ -164,7 +161,3 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
 
     return a_can_series, a_bar_series, a_tau_series, x_c_series, x_t_series, L_series, R_series
 end
-
-
-
-
