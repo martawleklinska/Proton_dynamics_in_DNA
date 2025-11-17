@@ -122,6 +122,19 @@ function get_wavefunctions_qho(x_range, n::Int, k::Int; is_at::Bool = true)
     return left_wave_func, right_wave_func, energies_left, energies_right
 end
 
+function get_energy_levels(L::Float64, R::Float64, n_max::Int, k_max::Int, is_at::Bool = true)
+    mass = 1836
+    energies_left = Vector{Float64}(undef, n_max)
+    energies_right = Vector{Float64}(undef, k_max)
+    ene_tau = is_at ? 0.021 : 0.0158
+    for i in 1:n_max
+        energies_left[i] = L/mass * ((i-1) + 0.5)
+    end
+    for i in 1:k_max
+        energies_right[i] = R/mass * ((i-1) + 0.5) + ene_tau
+    end
+    return energies_left, energies_right
+end
 ##
 function plot_harmonic_solutions(scale=0.001, is_at::Bool = true)
     x = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)

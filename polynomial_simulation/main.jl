@@ -3,6 +3,7 @@ using LinearAlgebra
 include("utils.jl")
 include("dynamics.jl")
 include("visualize.jl")
+include("../true_calc_at/schrodinger_eqn.jl")
 
 ## =================== G-C base pair ===================
 
@@ -25,8 +26,14 @@ x_c, x_t = -1.03, 1.15
 # CANONICAL, BARRIER AND TAUTOMERICAL TIME DEPENDENCY [X_T AND X_C MOVING]
 L_series = readdlm("data/L_series_gc.txt") |> vec
 R_series = readdlm("data/R_series_gc.txt") |> vec
-can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical)
-make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_gc.gif")
+# can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical)
+# make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_gc.gif")
+
+is_at = false
+L = L_series[1]
+R = R_series[1]
+ene_left, ene_right = get_energy_levels(L, R, 10, 3, is_at)
+println(ene_left, "\n", ene_right)
 
 ## =================== A-T base pair ==================
 a_can, b_can, c_can = 0.01548757014342916, 0.0544195348802887, 0.04817678375503837
@@ -51,6 +58,14 @@ R_series = readdlm("data/R_series_at.txt") |> vec
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical, false)
 make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_at.gif", is_gc_base_pair=false)
 
+# get AT energy levels
+is_at = true
+L = L_series[1]
+R = R_series[1]
+ene_left, ene_right = get_energy_levels(L, R, 8, 3)
+println(ene_left, "\n", ene_right)
+
+
 ## hermite approximation
 include("hermite.jl")
 
@@ -66,16 +81,13 @@ println(is_harmonic_approx_close(is_at =true))
 println(is_harmonic_approx_close(is_at = false))
 
 ## calculate the differences betwween energy eigenvalues of harmonic model and extrapolated functions 
-is_at = false
-include("../true_calc_at/schrodinger_eqn.jl")
-x_range = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
-_, _, ene_left, ene_right = get_wavefunctions_qho(x_range, 17, 13)
-println(ene_left, "\n", ene_right)
+
+
+
 """
 g-c: canonical eigenstates: 1-6, 7-11 - naprzemiennie
 a-t: canonical eigenstates: 1-5, 6-11 - naprzemiennie
 """
-
 energies, _, _ = solve_schrodinger(13)
 println("A-T:energy eigenstates differences")
 for i in 1:11
@@ -89,9 +101,6 @@ for i in 1:11
 end
 
 ## g-c
-is_at = true
-x_range = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
-_, _, ene_left, ene_right = get_wavefunctions_qho(x_range, 14, 6)
 
 energies, _, _ = solve_schrodinger(12, 1000, (-4., 2.9), false)
 println("G-C:energy eigenstates differences")
