@@ -1,6 +1,7 @@
 using LinearAlgebra, SparseArrays
 # using Arpack
 using CairoMakie
+include("hermite.jl")
 
 function model_at(x)
     a_can, b_can, c_can = 0.01548757014342916, 0.0544195348802887, 0.04817678375503837
@@ -28,7 +29,7 @@ function model_gc(x)
         return a_tau .* x .^ 2 + b_tau .* x + c_tau
     end
 end
-function get_potential(x; is_at=true)
+function get_potential_model(x; is_at=true)
     return is_at ? model_at.(x) : model_gc.(x)
 end
 
@@ -38,6 +39,9 @@ TISE with FD returns: energies, wavefunctions, x
     nstates: n/o of lowest eigenstates
     n: grid plot_at_instance
     xlims: (xmin, xmax)
+- IMPORTANT
+    This consideres the numerical solution of the whole system, so both wells 
+    simultaneously. The analitical model however isn't at all solved nuemrically.
 """
 function solve_schrodinger_sum_harmonic(nstates::Int64=10, n::Int64=1000, xlims::Tuple{Float64, Float64}=(-3.5, 3.0),
                             is_at::Bool=true)
@@ -51,7 +55,7 @@ function solve_schrodinger_sum_harmonic(nstates::Int64=10, n::Int64=1000, xlims:
 
     T = spdiagm(-1 => off, 0 => main, 1 => off)
 
-    V_diag = get_potential(collect(x), is_at = is_at)
+    V_diag = get_potential_model(collect(x), is_at = is_at)
     V_diag .-= minimum(V_diag)  
     V = spdiagm(0 => V_diag)
 
@@ -77,9 +81,17 @@ function solve_schrodinger_sum_harmonic(nstates::Int64=10, n::Int64=1000, xlims:
     return energies, wavefuncs, x
 end
 
+"""
+Calculation of analytically known solutions of the translated single harmonic oscillator problem.
+    Takes: 
+    - x_range that is considered;
+    - number of n states on the LHS well (canonical);
+    - number of k states on the RHS well (tautomerical);
+    - and the information whether its for A-T or G-C (bool).
+    Returns:
+    - left, right wavefunctions, left, right energies. 
 
-include("hermite.jl")
-
+"""
 function get_wavefunctions_qho(x_range, n::Int, k::Int; is_at::Bool = true)
     a_can = is_at ? 0.01548757014342916 : 0.006457467585167605
     a_tau = is_at ? 0.0125386460155263 : 0.013406834311699567
@@ -122,6 +134,10 @@ function get_wavefunctions_qho(x_range, n::Int, k::Int; is_at::Bool = true)
     return left_wave_func, right_wave_func, energies_left, energies_right
 end
 
+"""
+Simplified function from the above but used for changing R and L to determine the energies.
+    Returns energies left and right for a given L, R param.
+"""
 function get_energy_levels(L::Float64, R::Float64, n_max::Int, k_max::Int, is_at::Bool = true)
     mass = 1836
     energies_left = Vector{Float64}(undef, n_max)
@@ -139,7 +155,7 @@ end
 function plot_harmonic_solutions(scale=0.001, is_at::Bool = true)
     x = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
     left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
-    V = get_potential(x, is_at = is_at)
+    V = get_potential_model(x, is_at = is_at)
 
     fig = Figure(resolution = (800, 600))
 
@@ -177,7 +193,7 @@ end
 function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
     x = is_at ? LinRange(-3.0, 3.0, 300) : LinRange(-4.0, 2.9, 300)
     left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
-    V = get_potential(x, is_at = is_at)
+    V = get_potential_model(x, is_at = is_at)
 
     fig = Figure(resolution = (800, 600))
 

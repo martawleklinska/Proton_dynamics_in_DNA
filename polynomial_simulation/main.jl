@@ -4,6 +4,7 @@ include("utils.jl")
 include("dynamics.jl")
 include("visualize.jl")
 include("../true_calc_at/schrodinger_eqn.jl")
+include("schrodinger_eqn.jl")
 
 ## =================== G-C base pair ===================
 

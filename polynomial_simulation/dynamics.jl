@@ -81,7 +81,13 @@ function get_xc(parabola1::ParabolaParams, parabola2::ParabolaParams, is_gc_base
         return x1 > x2 ? x1 : x2
     end
 end
-
+"""
+The function that find the dynamics of the harmonic approximation of the potential energy
+     for the proton within the DNA bp while preserving the continuity of the potential.
+It takes the initial canonical, barrier and tautomerical values of the model and then changes 
+        the ω values within the thermal excitations.
+Returns parameters of the model in each time frame.
+"""
 function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams, 
     tautomerical_::ParabolaParams, is_gc_base_pair::Bool = true)
     T = 20000
