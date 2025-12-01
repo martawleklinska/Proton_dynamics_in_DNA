@@ -57,14 +57,14 @@ L_series = readdlm("data/L_series_at.txt") |> vec
 R_series = readdlm("data/R_series_at.txt") |> vec
 
 can, bar, tau, x_c_series, x_t_series = evolve_all_forms(canonical, barrier, tautomerical, false)
-make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_at.gif", is_gc_base_pair=false)
+# make_gif_independent_series(can, bar, tau, x_c_series, x_t_series, L_series, R_series, "graphics/model/parabolas_independent_at.gif", is_gc_base_pair=false)
 
-# get AT energy levels
-is_at = true
-L = L_series[1]
-R = R_series[1]
-ene_left, ene_right = get_energy_levels(L, R, 8, 3)
-println(ene_left, "\n", ene_right)
+# # get AT energy levels
+# is_at = true
+# L = L_series[1]
+# R = R_series[1]
+# ene_left, ene_right = get_energy_levels(L, R, 8, 3)
+# println(ene_left, "\n", ene_right)
 
 
 ## hermite approximation

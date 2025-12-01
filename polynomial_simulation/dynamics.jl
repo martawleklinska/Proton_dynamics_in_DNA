@@ -155,12 +155,15 @@ function evolve_all_forms(canonical_::ParabolaParams, barrier_::ParabolaParams,
         R = sqrt(abs(2 * tautomerical.a * 1836))
         push!(L_series, L)
         push!(R_series, R)
+        println("xc", x_c)
     end
 
     if is_gc_base_pair
+        writedlm("data/x_c_gc.txt", x_c_series)
         writedlm("data/L_series_gc.txt", L_series)
         writedlm("data/R_series_gc.txt", R_series)
     else
+        writedlm("data/x_c_at.txt", x_c_series)
         writedlm("data/L_series_at.txt", L_series)
         writedlm("data/R_series_at.txt", R_series)
     end
