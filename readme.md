@@ -9,7 +9,7 @@ cd moyal_solver/
 ./build.sh
 cd build/
 ./main
-'''
+```
 
 ## TODO
 Check what kind of a initial condition to use and how to caption the tautomerisation.
