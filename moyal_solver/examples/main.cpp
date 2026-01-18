@@ -18,7 +18,7 @@ int main() {
                   << ", p0 = " << config.p_init << "\n\n";
         
         // Create potential - we're choosing Duffing
-        auto potential = std::make_unique<GodbeerAT>();
+        auto potential = std::make_unique<SlocombeGC>();
         
         // Create solver
         MoyalSolver solver(config, std::move(potential));

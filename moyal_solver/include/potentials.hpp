@@ -103,7 +103,7 @@ class GodbeerAT : public Potential {
 class SlocombeGC : public Potential {
     public:
         double V1=0.1617;
-        double V2=0.082, ;
+        double V2=0.082;
         double a1=0.305;
         double a2=0.755;
         double r1=-2.7;

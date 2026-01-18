@@ -15,7 +15,7 @@ function create_wigner_animation()
     for path in output_paths
         if isdir(path)
             output_dir = path
-            println("✓ Found output directory at: $path")
+            println("Found output directory at: $path")
             break
         end
     end
@@ -85,7 +85,7 @@ function create_wigner_animation()
         println("Warning: Could not create colorbar: $e")
     end
     
-    gif_filename = "moyal_solver/graphics/wigner_evolution.gif"
+    gif_filename = "moyal_solver/graphics/wigner_evolution_GC.gif"
     
     gif_dir = dirname(gif_filename)
     if !isdir(gif_dir)
@@ -159,7 +159,7 @@ function create_wigner_animation()
             println("Warning: Could not create colorbar for snapshot $i: $e")
         end
         
-        png_filename = @sprintf("moyal_solver/graphics/AT/wigner_snapshot_t%.3f.png", time_val)
+        png_filename = @sprintf("moyal_solver/graphics/GC/wigner_snapshot_t%.3f.png", time_val)
         
 
         png_dir = dirname(png_filename)
