@@ -155,7 +155,7 @@ void WDF::saveToFile(const std::string& filename) const {
             file << X[i][j] << " " << P[i][j] << " " 
                  << wigner_[i][j].real() << " " << wigner_[i][j].imag() << "\n";
         }
-        file << "\n";
+        // file << "\n";
     }
 }
 

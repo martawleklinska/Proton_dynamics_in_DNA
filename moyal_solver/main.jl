@@ -1,6 +1,8 @@
 using CairoMakie, DelimitedFiles, Printf
 using StatsBase
 
+const dt = 1.  # time step 
+
 function create_wigner_animation()
     output_paths = [
         "build/output/",  
@@ -65,10 +67,11 @@ function create_wigner_animation()
     wigner_obs = Observable(zeros(nx, np))
     
     ax = Axis(fig[1, 1], 
-              xlabel = L"\text{Położenie} x", 
-              ylabel = L"\text{Pęd} p",
+              xlabel = L"\text{Położenie}\; x", 
+              ylabel = L"\text{Pęd} \;p",
               title = time_obs,
               titlesize = 25,
+              limits = ((-10., 10.), (-20., 20.)),
               xlabelsize = 25,
               ylabelsize = 25)
     
@@ -82,7 +85,13 @@ function create_wigner_animation()
         println("Warning: Could not create colorbar: $e")
     end
     
-    gif_filename = "moyal_solver/graphics/tunneling/wigner_evolution.gif"
+    gif_filename = "moyal_solver/graphics/wigner_evolution.gif"
+    
+    gif_dir = dirname(gif_filename)
+    if !isdir(gif_dir)
+        mkpath(gif_dir)
+        println("Created directory: $gif_dir")
+    end
     
     record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
         filename = animation_files[frame_idx]
@@ -129,6 +138,7 @@ function create_wigner_animation()
                       ylabel = L"\text{Pęd } p", 
                       title = @sprintf("Funkcja Wignera (t = %.3f)", time_val),
                       titlesize = 35,
+                      limits = ((-10., 10.), (-20., 20.)),
                       xlabelsize = 35,
                       ylabelsize = 35)
         
@@ -139,7 +149,7 @@ function create_wigner_animation()
         catch e
             println("Warning: Using fallback colormap for snapshot $i: $e")
             heatmap!(ax_snap, x_unique, p_unique, W_vis,
-                    colormap = :viridis,
+                    colormap = :RuBu,
                     colorrange = (w_min, w_max))
         end
         
@@ -149,7 +159,15 @@ function create_wigner_animation()
             println("Warning: Could not create colorbar for snapshot $i: $e")
         end
         
-        png_filename = @sprintf("moyal_solver/graphics/tunneling/wigner_snapshot_t%.3f.png", time_val)
+        png_filename = @sprintf("moyal_solver/graphics/AT/wigner_snapshot_t%.3f.png", time_val)
+        
+
+        png_dir = dirname(png_filename)
+        if !isdir(png_dir)
+            mkpath(png_dir)
+            println("Created directory: $png_dir")
+        end
+        
         save(png_filename, fig_snap, px_per_unit = 2)  
 
     end
@@ -183,8 +201,16 @@ function create_nonclassicality_plot()
     
     lines!(ax, t, delta, linewidth = 3, color = :purple)
     hlines!(ax, [0], color = :black, linestyle = :dash, alpha = 0.5)
-    # display(fig)
-    save("moyal_solver/graphics/nonclassicality.png", fig)
+    
+    # Create directory if it doesn't exist
+    nonclass_filename = "moyal_solver/graphics/nonclassicality.png"
+    nonclass_dir = dirname(nonclass_filename)
+    if !isdir(nonclass_dir)
+        mkpath(nonclass_dir)
+        println("Created directory: $nonclass_dir")
+    end
+    
+    save(nonclass_filename, fig)
     return fig
 end
 create_nonclassicality_plot()

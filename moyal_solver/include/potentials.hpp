@@ -1,6 +1,7 @@
 #pragma once
 #include "moyal_setup.hpp"
 #include<memory>
+#include<cmath>
 
 /**
  * @brief gaussian potential
@@ -90,6 +91,32 @@ class GodbeerAT : public Potential {
         double operator()(double v, double t = 0.0) const override {
             double x = v/alpha;
             return a4*x * x * x * x + a3*x * x * x + a2*x * x + a1*x + a0;
+        }
+        std::unique_ptr<Potential> clone() const override {
+            return std::make_unique<GodbeerAT>();
+        }
+};
+
+/**
+ * @brief Godbeer potential - 4th order polynomial
+ */
+class SlocombeGC : public Potential {
+    public:
+        double V1=0.1617;
+        double V2=0.082, ;
+        double a1=0.305;
+        double a2=0.755;
+        double r1=-2.7;
+        double r2=2.1;
+
+        double const_term = 0.166 + 0.00019;
+
+        double operator()(double q, double t = 0.0) const override {
+            double exp1 = std::exp(-2 * a1 * (q - r1));
+            double exp2 = std::exp(-a1 * (q - r1));
+            double exp3 = std::exp(-2 * a2 * (r2 - q));
+            double exp4 = std::exp(-a2 * (r2 - q));
+            return V1 * (exp1 - 2 * exp2) + V2 * (exp3 - 2 * exp4) + const_term;
         }
         std::unique_ptr<Potential> clone() const override {
             return std::make_unique<GodbeerAT>();
