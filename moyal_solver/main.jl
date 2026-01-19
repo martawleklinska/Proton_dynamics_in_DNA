@@ -180,7 +180,7 @@ create_wigner_animation()
 ##
 
 function create_nonclassicality_plot()
-    stats_file = "masters/moyal_solver/build/output/stats.dat"
+    stats_file = "moyal_solver/build/output/stats.dat"
     if !isfile(stats_file)
         println("Stats file not found, skipping nonclassicality plot")
         return nothing
@@ -210,7 +210,7 @@ function create_nonclassicality_plot()
         println("Created directory: $nonclass_dir")
     end
     
-    save(nonclass_filename, fig)
+    # save(nonclass_filename, fig)
     return fig
 end
 create_nonclassicality_plot()
@@ -221,19 +221,9 @@ a3 = -0.0053
 a2 = -0.0414
 a1 = 0.0158
 a0 = 0.0312
-        # double alpha = 1.963;
-        # double a4 = 0.0207;
-        # double a3 = -0.0053;
-        # double a2 = -0.0414;
-        # double a1 = 0.0158;
-        # double a0 = 0.0312;
+  
 
-        # double operator()(double v, double t = 0.0) const override {
-        #     double x = v/alpha;
-        #     return a4*x * x * x * x + a3*x * x * x + a2*x * x + a1*x + a0;
-        # }
-
-function plot_duffing_potential()
+function plot_Godbeer_AT_potential()
     x_unique = range(-3, 3, 300)
     p_unique = range(-15.5, 15.5, 200)
     v_unique = x_unique./alpha
@@ -271,12 +261,12 @@ function plot_duffing_potential()
     # axislegend(ax2, position=:lb, framevisible = false)
     
 
-    # display(fig)
-    save("moyal_solver/graphics/hamiltonian_godbeer.pdf", fig)
+    display(fig)
+    # save("moyal_solver/graphics/hamiltonian_godbeer.pdf", fig)
     return fig
 end
 
-plot_duffing_potential()
+plot_Godbeer_AT_potential()
 
 ## exp values
 
@@ -302,25 +292,25 @@ function get_exp_vals()
     lines!(ax, t, x, color = ax1_color, linewidth = 4)
     lines!(ax2, t, p, color = ax2_color, linewidth = 4)
     
-    # display(fig)
-    save("moyal_solver/graphics/xp_exp_val.pdf", fig)
+    display(fig)
+    # save("moyal_solver/graphics/xp_exp_val.pdf", fig)
 end
 
 get_exp_vals()
 ## create trajectory of xp values
 function get_traj_of_exp_vals()
-    alpha = -5e-1
-    beta  =  1e-2
-    gamma =  0.5
-    omega =  1.0e-1
-    m = 1
-    x_unique = range(-10, 12, 300)
-    p_unique = range(-5.5, 5.5, 200)
+    x_unique = range(-3, 3, 300)
+    p_unique = range(-10., 10., 200)
+    v_unique = x_unique./alpha
     
     t = 0.0  
-    Vx = @. 0.5*alpha * x_unique^2 + 
-            0.25*beta * x_unique^4 - 
-            gamma * x_unique * cos(omega * t)
+    Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
+    m = 1836
+    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+    
+    Emin = 0
+    Emax = 0 + 0.1  
+    levels = range(Emin, Emax, length=25)
     
     H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
 
@@ -328,13 +318,6 @@ function get_traj_of_exp_vals()
     t = data[:, 2]
     x = data[:, 3]
     p = data[:, 4]
-
-    x_min = sqrt(-alpha/beta)  
-    V_min = 0.5*alpha*x_min^2 + 0.25*beta*x_min^4
-    
-    Emin = minimum(H)
-    Emax = V_min + 10.0  
-    levels = range(Emin, Emax, length=25)
     
     fig = Figure(size=(800, 500))
     
@@ -348,12 +331,15 @@ function get_traj_of_exp_vals()
     contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5)
     lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych")
     
-    scatter!(ax2, [-4.0], [1.15], color=:green, markersize=15, label="warunek początkowy")
+    # scatter!(ax2, [-4.0], [1.15], color=:green, markersize=15, label="warunek początkowy")
     axislegend(ax2, position=:lb, framevisible = false, labelsize = 20)
     
 
-    # display(fig)
-    save("moyal_solver/graphics/trajectory.pdf", fig)
+    display(fig)
+    # save("moyal_solver/graphics/trajectory.pdf", fig)
     return fig
 end
 get_traj_of_exp_vals()
+
+
+## how in an efficient way plot gifs?

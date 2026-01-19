@@ -28,14 +28,14 @@ struct MoyalConfig {
     int gridX = 2048;      
     int gridP = 2048;
     double ampX = 50.0;   
-    double ampP = 150.0;
+    double ampP = 250.0;
 
     double hbar = 1.0;
     double mass = 1836.0;
 
     // time params
-    double dt = 1.3;
-    int timeSteps = 1000;
+    double dt = 1.5;
+    int timeSteps = 1500;
 
     // init conditions
     double x_init  = -2.5;
@@ -45,6 +45,6 @@ struct MoyalConfig {
     double sigma_p = 1.;    ///< sigma_p = hbar/(2*sigma_x) = 1/(2*1.0)
 
     // output
-    int outputEvery = 2;
+    int outputEvery = 5;
     std::string outputDir = "./output/";
 };
