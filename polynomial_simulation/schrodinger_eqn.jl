@@ -152,15 +152,15 @@ function get_energy_levels(L::Float64, R::Float64, n_max::Int, k_max::Int, is_at
     return energies_left, energies_right
 end
 ##
-function plot_harmonic_solutions(scale=0.001, is_at::Bool = true)
+function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
     x = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
     left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
     V = get_potential_model(x, is_at = is_at)
 
     fig = Figure(resolution = (800, 600))
 
-    ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
-        title = is_at ? L"\text{A-T: harmonic model}" : L"\text{G-C: harmonic model}",
+    ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"$E$ \text{ (a.u.)}",
+        title = is_at ? L"\text{A-T: model harmoniczny}" : L"\text{G-C: model harmoniczny}",
         limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.032)),
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
         xticklabelsize = 20, yticklabelsize = 20)
@@ -230,12 +230,12 @@ function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
     # save("graphics/model/$filename.pdf", fig)
 end
 
-# ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
-# plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
+plot_harmonic_solutions()
 
-# ## g-C
-# ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
-# plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
+## g-C
+ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
+plot_harmonic_solutions(0.0004, false)
 
 ##
 # plot_harmonic_solutions()

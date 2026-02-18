@@ -89,7 +89,7 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     V = get_potential(x, is_at = is_at)
     
     fig = Figure(resolution = (800, 600))
-    ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
+    ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"$E$ \text{ (a.u.)}",
         title = is_at ? L"\text{A-T}" : L"\text{G-C}",
         limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.035)),
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
