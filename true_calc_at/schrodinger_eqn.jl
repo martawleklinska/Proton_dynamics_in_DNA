@@ -92,10 +92,10 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"$E$ \text{ (a.u.)}",
         title = is_at ? L"\text{A-T}" : L"\text{G-C}",
         limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.035)),
-        ylabelsize = 30, xlabelsize = 30, titlesize = 30,
-        xticklabelsize = 20, yticklabelsize = 20)
-    ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=30,
-        yticklabelsize = 20, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
+        ylabelsize = 35, xlabelsize = 35, titlesize = 35,
+        xticklabelsize = 25, yticklabelsize = 25)
+    ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=35,
+        yticklabelsize = 25, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
     hidespines!(ax_wf)
     hidexdecorations!(ax_wf)
     cm = cgrad(:tab20c, 13)
@@ -112,9 +112,9 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     save("graphics/true_sim/$filename.pdf", fig)
 end
 
-ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
-plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+# ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
+# plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
 
-## g-C
-ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)
-plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
+# ## g-C
+# ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)
+# plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)

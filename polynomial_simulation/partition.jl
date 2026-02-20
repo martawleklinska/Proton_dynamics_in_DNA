@@ -44,7 +44,7 @@ end
 function get_temp_dependence_Z(;is_at::Bool = true)
     fig = Figure(size = (1000, 500))
     ax1 = Axis(fig[1,1], xlabel = L"$T$ [K]", ylabel = L"$Z$", title = L"\text{A-T}", 
-    xlabelsize = 35, ylabelsize = 35, titlesize = 35, xticklabelsize = 30, yticklabelsize = 30)
+    xlabelsize = 30, ylabelsize = 30, titlesize = 30, xticklabelsize = 25, yticklabelsize = 25)
     # ax2 = Axis(fig[1,2], xlabel = L"$T$ [K]", ylabel = L"$Z$", title = L"\text{Dokładne rozwiązanie}", 
     # xlabelsize = 25, ylabelsize = 25, titlesize = 30, xticklabelsize = 20, yticklabelsize = 20)
     
@@ -63,12 +63,12 @@ function get_temp_dependence_Z(;is_at::Bool = true)
         ax1.title = L"\text{G-C}"
     end
 
-    Legend(fig[2,1], ax1, framevisible = false, orientation = :horizontal, labelsize = 35)
+    Legend(fig[2,1], ax1, framevisible = false, orientation = :horizontal, labelsize = 30)
     save("graphics/part_func$is_at.pdf", fig)
     return fig
 end
 
-fig = get_temp_dependence_Z(is_at = false)
+# fig = get_temp_dependence_Z(is_at = true)
 
 function get_USF(is_HO::Bool;is_at::Bool = true)
     T_range = LinRange(100, 400, 100)
@@ -121,26 +121,26 @@ function get_other_ther_funcs(;is_at::Bool = true)
     fig = Figure(size = (1000, 800))
     ax1 = Axis(fig[1,1], 
     # xlabel = L"$T$ [K]",xlabelsize = 35, 
-    ylabel = L"$Z$ [a.u.]", xticklabelsize = 0,
+    ylabel = L"$Z$", xticklabelsize = 0,
     # title = L"\text{Funkcja rozdziału}", titlesize = 35, 
-    ylabelsize = 35, 
-    yticklabelsize = 30)
+    ylabelsize = 30, 
+    yticklabelsize = 25)
     
     ax2 = Axis(fig[1,2], 
     # xlabel = L"$T$ [K]", xlabelsize = 35, 
-    ylabel = L"$F$ [$10^{-3}$ a.u.]", xticklabelsize = 0,
+    ylabel = L"$F$ \;($10^{-3}$ a.u.)", xticklabelsize = 0,
     # title = L"\text{Energia swobodna}", titlesize = 35, 
-    ylabelsize = 35, yticklabelsize = 30)
+    ylabelsize = 30, yticklabelsize = 25)
 
-    ax3 = Axis(fig[2,1], xlabel = L"$T$ [K]", ylabel = L"$U$ [$10^{-3}$ a.u.]",
+    ax3 = Axis(fig[2,1], xlabel = L"$T$ (K)", ylabel = L"$U$\; ($10^{-3}$ a.u.)",
     # title = L"\text{Energia wewnętrzna}", titlesize = 35, 
-    xlabelsize = 35, ylabelsize = 35, 
-    xticklabelsize = 30, yticklabelsize = 30)
+    xlabelsize = 30, ylabelsize = 30, 
+    xticklabelsize = 25, yticklabelsize = 25)
 
-    ax4 = Axis(fig[2,2], xlabel = L"$T$ [K]", ylabel = L"$S$ [$10^{-6}$ a.u.]",
+    ax4 = Axis(fig[2,2], xlabel = L"$T$ (K)", ylabel = L"$S$\; ($10^{-6}$ a.u.)",
     # title = L"\text{Entropia}", titlesize = 35, 
-    xlabelsize = 35, ylabelsize = 35, 
-    xticklabelsize = 30, yticklabelsize = 30)
+    xlabelsize = 30, ylabelsize = 30, 
+    xticklabelsize = 25, yticklabelsize = 25)
 
     T_range, F, U, S = get_USF(true; is_at=is_at)
     T_range2, F2, U2, S2 = get_USF(false; is_at=is_at)
@@ -151,6 +151,20 @@ function get_other_ther_funcs(;is_at::Bool = true)
     lines!(ax3, T_range, U*1e03, linewidth=5, color = color1)
     lines!(ax4, T_range, S*1e06, linewidth=5, color = color1)
     
+    if is_at
+        text!(ax1, 110, 0.30; text = L"\text{(a)}", fontsize = 30)
+        text!(ax2, 110, 1.43; text = L"\text{(b)}", fontsize = 30)
+        text!(ax3, 110, 1.535; text = L"\text{(c)}", fontsize = 30)
+        text!(ax4, 110, -1.5; text = L"\text{(d)}", fontsize = 30)
+        ylims!(ax4, [-13, 1])
+    else
+        text!(ax1, 110, 0.53; text = L"\text{(a)}", fontsize = 30)
+        text!(ax2, 110, 0.88; text = L"\text{(b)}", fontsize = 30)
+        text!(ax3, 110, 1.35; text = L"\text{(c)}", fontsize = 30)
+        text!(ax4, 110, 1.2; text = L"\text{(d)}", fontsize = 30)
+
+    end
+
     lines!(ax2, T_range2, F2*1e03, linewidth=5, color = color2)
     lines!(ax3, T_range2, U2*1e03, linewidth=5, color = color2)
     lines!(ax4, T_range2, S2*1e06, linewidth=5, color = color2)
@@ -170,8 +184,8 @@ function get_other_ther_funcs(;is_at::Bool = true)
     if is_at==false
         ax1.yticks = [0.0, 0.2, 0.4, 0.6]
     end
-    Legend(fig[3, 1:2], ax1, framevisible = false, orientation = :horizontal, labelsize = 35)
+    Legend(fig[3, 1:2], ax1, framevisible = false, orientation = :horizontal, labelsize = 30)
     save("graphics/term_funcs_at$is_at.pdf", fig)
     return fig
 end
-# get_other_ther_funcs(;is_at = false)
+# get_other_ther_funcs(;is_at = true)

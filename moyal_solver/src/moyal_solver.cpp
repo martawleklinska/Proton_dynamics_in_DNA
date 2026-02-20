@@ -63,9 +63,9 @@ void MoyalSolver::strangSplittingStep() {
     auto& wigner_data = wigner_.data();
     
     // 1. Half kinetic step: T(dt/2) in momentum space
-    phase_space_.fft_x(wigner_data, true);   // FFT x → λ (momentum space)
+    phase_space_.fft_x(wigner_data, true);   // FFT x to lambda (momentum space)
     kinetic_prop_->apply(wigner_data, config_.dt / 2.0);  // Apply T(dt/2)
-    phase_space_.fft_x(wigner_data, false);  // IFFT λ → x
+    phase_space_.fft_x(wigner_data, false);  // IFFT lambda to x
     
     // 2. Full potential step: V(dt) in position space  
     phase_space_.fft_p(wigner_data, true);   // FFT p → θ (position space)

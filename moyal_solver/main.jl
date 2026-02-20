@@ -224,7 +224,7 @@ a0 = 0.0312
   
 
 function plot_Godbeer_AT_potential()
-    x_unique = range(-3, 3, 300)
+    x_unique = range(-2.95, 2.8, 300)
     p_unique = range(-15.5, 15.5, 200)
     v_unique = x_unique./alpha
     
@@ -240,34 +240,78 @@ function plot_Godbeer_AT_potential()
     fig = Figure(size=(1000, 400))
     
     ax1 = Axis(fig[1,1], 
-               xlabel = L"x", 
-               ylabel = L"V(x)",
+               xlabel = L"$x$ \text{ (a.u.)}", 
+               ylabel = L"U^{\mathrm{A-T}}(x) \; \text{(a.u.)}",
                title = L"\text{Potencjał 4 stopnia}",
-               xlabelsize = 20,
-               ylabelsize = 20, titlesize = 18)
+               xlabelsize = 27, 
+               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
     lines!(ax1, x_unique, Vx, linewidth=3, color=:blue)
+    text!(ax1, -2.8, 0.034; text = L"\text{(a)}", fontsize = 30)
 
     ax2 = Axis(fig[1,2], 
-               xlabel = L"x", 
-               ylabel = L"p",
+               xlabel = L"$x$ \text{ (a.u.)}", 
+               ylabel = L"$p$ \text{ (a.u.)}",
                title = L"\text{Hamiltonian w przestrzeni fazowej}",
-               xlabelsize = 20,
-               ylabelsize = 20, titlesize = 18)
+               xlabelsize = 27,limits = ((-2.95, 2.8), (-15.5, 15.5)),
+               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
     contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5)
+    text!(ax2, -2.8, 10.2; text = L"\text{(b)}", fontsize = 30)
     
-    # scatter!(ax2, [x_min, -x_min], [0, 0], color=:red, markersize=12, label="studnie potencjału")
-    
-    # scatter!(ax2, [-4.0], [1.15], color=:green, markersize=15, label="warunek początkowy")
-    # axislegend(ax2, position=:lb, framevisible = false)
-    
-
     display(fig)
-    # save("moyal_solver/graphics/hamiltonian_godbeer.pdf", fig)
+    save("moyal_solver/graphics/hamiltonian_godbeer.pdf", fig)
     return fig
 end
 
 plot_Godbeer_AT_potential()
 
+
+##
+
+function plot_Slocombe_GC_potential()
+    V1 = 0.1617
+    V2 = 0.082
+    a1 = 0.305
+    a2 = 0.755
+    r1 = -2.7
+    r2 = 2.1
+    m = 1836
+    x_unique = range(-3.8, 2.4, 300)
+    p_unique = range(-15.5, 15.5, 200)
+    
+    t = 0.0  
+    Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
+    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+    
+    Emin = 0
+    Emax = 0 + 0.1  
+    levels = range(Emin, Emax, length=25)
+    
+    fig = Figure(size=(1000, 400))
+    
+    ax1 = Axis(fig[1,1], 
+               xlabel = L"$x$ \text{ (a.u.)}", 
+               ylabel = L"U^{\mathrm{G-C}}(x) \; \text{(a.u.)}",
+               title = L"\text{Podwójny potencjał Morse'a}",
+               xlabelsize = 27,
+               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
+    lines!(ax1, x_unique, Vx, linewidth=3, color=:blue)
+    text!(ax1, -3.7, 0.024; text = L"\text{(a)}", fontsize = 30)
+
+    ax2 = Axis(fig[1,2], 
+               xlabel = L"$x$ \text{ (a.u.)}", 
+               ylabel = L"$p$ \text{ (a.u.)}",
+               title = L"\text{Hamiltonian w przestrzeni fazowej}",
+               xlabelsize = 27,limits = ((-3.8, 2.4), (-15.5, 15.5)),
+               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5)
+ 
+    text!(ax2, -3.7, 10.2; text = L"\text{(b)}", fontsize = 30)
+   
+    # display(fig)
+    save("moyal_solver/graphics/hamiltonian_slocombe.pdf", fig)
+    return fig
+end
+plot_Slocombe_GC_potential()
 ## exp values
 
 function get_exp_vals()

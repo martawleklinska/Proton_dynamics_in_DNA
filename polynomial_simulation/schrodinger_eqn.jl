@@ -153,7 +153,7 @@ function get_energy_levels(L::Float64, R::Float64, n_max::Int, k_max::Int, is_at
 end
 ##
 function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
-    x = is_at ? LinRange(-3.0, 3.0, 200) : LinRange(-4.0, 2.9, 200)
+    x = is_at ? LinRange(-3.3, 3.0, 200) : LinRange(-4.3, 2.9, 200)
     left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
     V = get_potential_model(x, is_at = is_at)
 
@@ -161,11 +161,11 @@ function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
 
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"$E$ \text{ (a.u.)}",
         title = is_at ? L"\text{A-T: model harmoniczny}" : L"\text{G-C: model harmoniczny}",
-        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.032)),
-        ylabelsize = 30, xlabelsize = 30, titlesize = 30,
-        xticklabelsize = 20, yticklabelsize = 20)
-    ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=30,
-        yticklabelsize = 20, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
+        limits = is_at ? ((-3.3, 2.9), (-0.005, 0.045)) : ((-4.3, 2.5), (-0.002, 0.032)),
+        ylabelsize = 35, xlabelsize = 35, titlesize = 35,
+        xticklabelsize = 25, yticklabelsize = 25)
+    ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=35,
+        yticklabelsize = 25, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
     hidespines!(ax_wf)
     hidexdecorations!(ax_wf)
     cm = cgrad(:tab20c, 13)
@@ -230,12 +230,12 @@ function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
     # save("graphics/model/$filename.pdf", fig)
 end
 
-ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
-plot_harmonic_solutions()
+# ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
+# plot_harmonic_solutions()
 
 ## g-C
-ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
-plot_harmonic_solutions(0.0004, false)
+# ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
+# plot_harmonic_solutions(0.0004, false)
 
 ##
 # plot_harmonic_solutions()
