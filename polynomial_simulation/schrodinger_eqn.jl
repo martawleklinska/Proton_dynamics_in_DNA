@@ -1,5 +1,5 @@
 using LinearAlgebra, SparseArrays
-# using Arpack
+using Arpack
 using CairoMakie
 include("hermite.jl")
 
@@ -153,8 +153,8 @@ function get_energy_levels(L::Float64, R::Float64, n_max::Int, k_max::Int, is_at
 end
 ##
 function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
-    x = is_at ? LinRange(-3.3, 3.0, 200) : LinRange(-4.3, 2.9, 200)
-    left_wf, right_wf, ene_left, ene_right = is_at ? get_wavefunctions_qho(x, 12, 5) : get_wavefunctions_qho(x, 14, 4, is_at = false)
+    energies, wavefuncs, x = is_at ? solve_schrodinger_sum_harmonic(14, 1000,(-3.5, 3.0), true) : solve_schrodinger_sum_harmonic(15, 1000,(-4.3, 2.9), false)
+    
     V = get_potential_model(x, is_at = is_at)
 
     fig = Figure(resolution = (800, 600))
@@ -171,23 +171,23 @@ function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
     cm = cgrad(:tab20c, 13)
     CairoMakie.lines!(ax, x, V, linewidth = 3.5, color = cm[1])
     
-    cm = cgrad(:YlGnBu, 13)
-    for (i, E) in enumerate(ene_left)
-        ψ = left_wf[:, i]
+    cm = cgrad(:YlGnBu, 18)
+    for (i, E) in enumerate(energies)
+        ψ = wavefuncs[:, i]
         CairoMakie.lines!(ax, x, E .+ ψ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
         CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
     end
     
-    cm = cgrad(:PuRd, 5)
-    for (i, E) in enumerate(ene_right)
-        ψ = right_wf[:, i]
-        CairoMakie.lines!(ax, x, E .+ ψ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
-        CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
-    end
+    # cm = cgrad(:PuRd, 5)
+    # for (i, E) in enumerate(ene_right)
+    #     ψ = right_wf[:, i]
+    #     CairoMakie.lines!(ax, x, E .+ ψ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
+    #     CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1], alpha = 0.5) 
+    # end
 
     # display(fig)
-    filename = is_at ? "model_AT" : "model_GC"
-    save("graphics/model/$filename.pdf", fig)
+    # filename = is_at ? "model_AT" : "model_GC"
+    # save("graphics/model/$filename.pdf", fig)
 end
 
 function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
@@ -233,7 +233,7 @@ end
 # ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
 # plot_harmonic_solutions()
 
-## g-C
+# g-C
 # ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
 # plot_harmonic_solutions(0.0004, false)
 

@@ -107,13 +107,13 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
         CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1]) 
     end
 
-    # display(fig)
+    display(fig)
     filename = is_at ? "fourth_order_wave_funcs_AT" : "morse_wave_funcs_GC"
-    save("graphics/true_sim/$filename.pdf", fig)
+    # save("graphics/true_sim/$filename.pdf", fig)
 end
 
-# ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
-# plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
+ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
+plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
 
 # ## g-C
 # ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)

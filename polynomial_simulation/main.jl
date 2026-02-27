@@ -83,34 +83,8 @@ println(is_harmonic_approx_close(is_at = false))
 
 ## calculate the differences betwween energy eigenvalues of harmonic model and extrapolated functions 
 
+energy_differences()
 
-
-"""
-g-c: canonical eigenstates: 1-6, 7-11 - naprzemiennie
-a-t: canonical eigenstates: 1-5, 6-11 - naprzemiennie
-"""
-energies, _, _ = solve_schrodinger(13)
-println("A-T:energy eigenstates differences")
-for i in 1:11
-    if i < 6
-        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
-    elseif i > 5 && i % 2 == 0 
-        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
-    elseif i > 5 && i % 2 != 0
-        println("(tautomerical diff) n = ", i, "\t", energies[i] - ene_right[i-5])
-    end
-end
-
-## g-c
-
-energies, _, _ = solve_schrodinger(12, 1000, (-4., 2.9), false)
-println("G-C:energy eigenstates differences")
-for i in 1:12
-    if i < 7
-        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
-    elseif i > 6 && i % 2 == 0 
-        println("(canonical diff) n = ", i, "\t", energies[i] - ene_left[i])
-    elseif i > 6 && i % 2 != 0
-        println("(tautomerical diff) n = ", i, "\t", energies[i] - ene_right[i-5])
-    end
-end
+## get coth plot 
+include("utils.jl")
+get_coth_approx()
