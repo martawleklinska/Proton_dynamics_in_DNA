@@ -77,7 +77,7 @@ function solve_schrodinger_sum_harmonic(nstates::Int64=10, n::Int64=1000, xlims:
             wavefuncs[:, j] .= real(wavefuncs[:, j])
         end
     end
-
+    writedlm("data/GC-energy_HO.txt", energies)
     return energies, wavefuncs, x
 end
 
@@ -234,8 +234,8 @@ end
 # plot_harmonic_solutions()
 
 # g-C
-# ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
-# plot_harmonic_solutions(0.0004, false)
+ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
+plot_harmonic_solutions(0.0004, false)
 
 ##
 # plot_harmonic_solutions()
