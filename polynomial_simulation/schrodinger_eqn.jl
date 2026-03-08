@@ -1,5 +1,6 @@
 using LinearAlgebra, SparseArrays
 using Arpack
+using DelimitedFiles
 using CairoMakie
 include("hermite.jl")
 
@@ -230,12 +231,13 @@ function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
     # save("graphics/model/$filename.pdf", fig)
 end
 
-# ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
+ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
+ene_at
 # plot_harmonic_solutions()
 
 # g-C
-ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
-plot_harmonic_solutions(0.0004, false)
+# ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
+# plot_harmonic_solutions(0.0004, false)
 
 ##
 # plot_harmonic_solutions()
