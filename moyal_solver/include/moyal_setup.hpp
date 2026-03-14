@@ -28,13 +28,13 @@ struct MoyalConfig {
     int gridX = 2048;      
     int gridP = 2048;
     double ampX = 50.0;   
-    double ampP = 250.0;
+    double ampP = 500.0;
 
     double hbar = 1.0;
     double mass = 1836.0;
 
     // time params
-    double dt = 1.5;
+    double dt = 1.;
     int timeSteps = 1500;
 
     // init conditions

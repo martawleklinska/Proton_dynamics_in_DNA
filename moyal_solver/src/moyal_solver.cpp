@@ -27,8 +27,7 @@ void MoyalSolver::evolve(int steps) {
     int total_steps = (steps > 0) ? steps : config_.timeSteps;
     
     std::cout << "Starting evolution for " << total_steps << " steps...\n";
-    
-    // Save initial state
+
     if (current_step_ % config_.outputEvery == 0) {
         outputData();
     }
@@ -56,10 +55,6 @@ void MoyalSolver::evolveOneStep() {
 }
 
 void MoyalSolver::strangSplittingStep() {
-    // Proper Moyal equation Strang splitting:
-    // exp(-iΔt/(2ℏ)T) exp(-iΔt/ℏ V) exp(-iΔt/(2ℏ)T)
-    // Where T acts in momentum space, V acts in position space
-    
     auto& wigner_data = wigner_.data();
     
     // 1. Half kinetic step: T(dt/2) in momentum space

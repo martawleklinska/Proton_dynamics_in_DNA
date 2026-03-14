@@ -5,8 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFTW REQUIRED fftw3)
+find_package(FFTW3 REQUIRED COMPONENTS double threads)
+# pkg_check_modules(FFTW REQUIRED fftw3)
 
 # Include directories
 include_directories(include)
@@ -32,7 +34,7 @@ set(HEADERS
 
 # Create library
 add_library(moyal_solver ${SOURCES} ${HEADERS})
-target_link_libraries(moyal_solver ${FFTW_LIBRARIES})
+target_link_libraries(moyal_solver ${FFTW3_LIBRARIES})
 target_compile_options(moyal_solver PRIVATE ${FFTW_CFLAGS_OTHER})
 
 # Example executable

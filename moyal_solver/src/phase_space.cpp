@@ -2,6 +2,8 @@
 #include <cmath>
 #include <stdexcept>
 
+const int FFTW_N_THREADS = 8;
+
 PhaseSpace::PhaseSpace(const MoyalConfig& config) : config_(config) {
     initializeGrids();
     createMeshgrids();
@@ -61,21 +63,29 @@ void PhaseSpace::createMeshgrids() {
 }
 
 void PhaseSpace::setupFFT() {
+    int res = fftw_init_threads();
+    if (res == 0){
+        throw std::runtime_error("FFTW thread init failed");
+    }
     work_x_ = fftw_alloc_complex(config_.gridX);
     work_p_ = fftw_alloc_complex(config_.gridP);
     
     if (!work_x_ || !work_p_) {
         throw std::runtime_error("Failed to allocate FFTW memory");
     }
-    
+    fftw_plan_with_nthreads(FFTW_N_THREADS);
     fft_x_forward_ = fftw_plan_dft_1d(config_.gridX, work_x_, work_x_, 
-                                     FFTW_FORWARD, FFTW_ESTIMATE);
+                                     FFTW_FORWARD, FFTW_MEASURE);
+    fftw_plan_with_nthreads(FFTW_N_THREADS);
     fft_x_backward_ = fftw_plan_dft_1d(config_.gridX, work_x_, work_x_, 
-                                      FFTW_BACKWARD, FFTW_ESTIMATE);
+                                      FFTW_BACKWARD, FFTW_MEASURE);
+    
+    fftw_plan_with_nthreads(FFTW_N_THREADS);
     fft_p_forward_ = fftw_plan_dft_1d(config_.gridP, work_p_, work_p_, 
-                                     FFTW_FORWARD, FFTW_ESTIMATE);
+                                     FFTW_FORWARD, FFTW_MEASURE);
+    fftw_plan_with_nthreads(FFTW_N_THREADS);
     fft_p_backward_ = fftw_plan_dft_1d(config_.gridP, work_p_, work_p_, 
-                                      FFTW_BACKWARD, FFTW_ESTIMATE);
+                                      FFTW_BACKWARD, FFTW_MEASURE);
 }
 
 void PhaseSpace::fft_x(ComplexMatrix& data, bool forward) {
