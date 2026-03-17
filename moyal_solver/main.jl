@@ -190,16 +190,16 @@ function create_nonclassicality_plot()
     t = data[:, 2]
     delta = size(data, 2) >= 8 ? data[:, 8] : zeros(length(t))  
     
-    fig = Figure(size = (800, 500))
+    fig = Figure(size = (1000, 500))
     ax = Axis(fig[1, 1],
-              xlabel = L"\text{Czas } t",
-              ylabel = L"\text{Parametr nieklasyczności } \delta(t)",
-              title = L"\text{Ewolucja nieklasyczności stanu kwantowego}",
-              titlesize = 25,
-                      xlabelsize = 25,
-                      ylabelsize = 25, xticklabelsize = 20, yticklabelsize = 20)
+              xlabel = L"t \text{ (a.u.)} ",
+              ylabel = L"\delta_{\mathrm{W}}(t)",
+            #   title = L"\text{Ewolucja nieklasyczności stanu kwantowego}",
+              titlesize = 30,
+                      xlabelsize = 30,
+                      ylabelsize = 30, xticklabelsize = 25, yticklabelsize = 25)
     
-    lines!(ax, t, delta, linewidth = 3, color = :purple)
+    lines!(ax, t, delta, linewidth = 6, color = :purple)
     hlines!(ax, [0], color = :black, linestyle = :dash, alpha = 0.5)
     
     # Create directory if it doesn't exist
@@ -210,7 +210,7 @@ function create_nonclassicality_plot()
         println("Created directory: $nonclass_dir")
     end
     
-    # save(nonclass_filename, fig)
+    save(nonclass_filename, fig)
     return fig
 end
 create_nonclassicality_plot()

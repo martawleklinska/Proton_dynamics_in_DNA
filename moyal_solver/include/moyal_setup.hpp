@@ -28,7 +28,7 @@ struct MoyalConfig {
     int gridX = 2048;      
     int gridP = 2048;
     double ampX = 50.0;   
-    double ampP = 500.0;
+    double ampP = 1000.0;
 
     double hbar = 1.0;
     double mass = 1836.0;
