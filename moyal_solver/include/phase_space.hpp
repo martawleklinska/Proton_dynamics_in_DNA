@@ -53,6 +53,9 @@
          */
         void fftshift_x(ComplexMatrix& data);
         void fftshift_p(ComplexMatrix& data);
+        
+        void applyMomentumMask(ComplexMatrix& data, double mask_fraction = 0.1);
+        void applyPositionMask(ComplexMatrix& data, double mask_fraction = 0.1);
 
     private:
         void initializeGrids();     //!< initialize: resize position, momentum and ffts grids

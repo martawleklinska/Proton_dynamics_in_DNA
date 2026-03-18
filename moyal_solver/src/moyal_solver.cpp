@@ -57,21 +57,24 @@ void MoyalSolver::evolveOneStep() {
 void MoyalSolver::strangSplittingStep() {
     auto& wigner_data = wigner_.data();
     
-    // 1. Half kinetic step: T(dt/2) in momentum space
-    phase_space_.fft_x(wigner_data, true);   // FFT x to lambda (momentum space)
-    kinetic_prop_->apply(wigner_data, config_.dt / 2.0);  // Apply T(dt/2)
-    phase_space_.fft_x(wigner_data, false);  // IFFT lambda to x
+    // Zastosuj maski PRZED krokiem - tłumi artefakty przy brzegach
+    phase_space_.applyMomentumMask(wigner_data);
+    phase_space_.applyPositionMask(wigner_data);
     
-    // 2. Full potential step: V(dt) in position space  
-    phase_space_.fft_p(wigner_data, true);   // FFT p → θ (position space)
-    potential_prop_->apply(wigner_data, config_.dt);      // Apply V(dt)
-    phase_space_.fft_p(wigner_data, false);  // IFFT θ → p
+    // 1. Pół kroku kinetycznego
+    phase_space_.fft_x(wigner_data, true);
+    kinetic_prop_->apply(wigner_data, config_.dt / 2.0);
+    phase_space_.fft_x(wigner_data, false);
     
-    // 3. Half kinetic step: T(dt/2) in momentum space
-    phase_space_.fft_x(wigner_data, true);   // FFT x → λ (momentum space)
-    kinetic_prop_->apply(wigner_data, config_.dt / 2.0);  // Apply T(dt/2)
-    phase_space_.fft_x(wigner_data, false);  // IFFT λ → x
+    // 2. Pełny krok potencjału
+    phase_space_.fft_p(wigner_data, true);
+    potential_prop_->apply(wigner_data, config_.dt);
+    phase_space_.fft_p(wigner_data, false);
     
+    // 3. Pół kroku kinetycznego
+    phase_space_.fft_x(wigner_data, true);
+    kinetic_prop_->apply(wigner_data, config_.dt / 2.0);
+    phase_space_.fft_x(wigner_data, false);
 }
 
 void MoyalSolver::computeExpectationValues(double& mean_x, double& mean_p, 

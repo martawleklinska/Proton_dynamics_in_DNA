@@ -1,12 +1,12 @@
 using CairoMakie, DelimitedFiles, Printf
 using StatsBase
 
-const dt = 1.  # time step 
+const dt = .5  # time step 
 
 function create_wigner_animation()
     output_paths = [
-        "build/output/",  
-        "masters/moyal_solver/build/output/",               
+        # "build/output/",  
+        # "masters/moyal_solver/build/output/",               
         # "moyal_solver/build/output/", 
         "moyal_solver/build/output/"             
     ]
@@ -58,7 +58,7 @@ function create_wigner_animation()
     end
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
     
-    animation_files = wigner_files[1:4:end]
+    animation_files = wigner_files[1:7:end]
     n_frames = length(animation_files)
         
     fig = Figure(size = (900, 700), fontsize = 16)
@@ -213,7 +213,7 @@ function create_nonclassicality_plot()
     save(nonclass_filename, fig)
     return fig
 end
-create_nonclassicality_plot()
+# create_nonclassicality_plot()
 ##
 alpha = 1.963
 a4 = 0.0207
@@ -262,7 +262,7 @@ function plot_Godbeer_AT_potential()
     return fig
 end
 
-plot_Godbeer_AT_potential()
+# plot_Godbeer_AT_potential()
 
 
 ##
@@ -311,7 +311,7 @@ function plot_Slocombe_GC_potential()
     save("moyal_solver/graphics/hamiltonian_slocombe.pdf", fig)
     return fig
 end
-plot_Slocombe_GC_potential()
+# plot_Slocombe_GC_potential()
 ## exp values
 
 function get_exp_vals()
@@ -340,7 +340,7 @@ function get_exp_vals()
     # save("moyal_solver/graphics/xp_exp_val.pdf", fig)
 end
 
-get_exp_vals()
+# get_exp_vals()
 ## create trajectory of xp values
 function get_traj_of_exp_vals()
     x_unique = range(-3, 3, 300)
@@ -383,7 +383,7 @@ function get_traj_of_exp_vals()
     # save("moyal_solver/graphics/trajectory.pdf", fig)
     return fig
 end
-get_traj_of_exp_vals()
+# get_traj_of_exp_vals()
 
 
 ## how in an efficient way plot gifs?

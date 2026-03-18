@@ -159,3 +159,50 @@ void PhaseSpace::fftshift_p(ComplexMatrix& data) {
         }
     }
 }
+
+void PhaseSpace::applyMomentumMask(ComplexMatrix& data, double mask_fraction) {
+    int nx = config_.gridX;
+    int np = config_.gridP;
+    
+    // Szerokość strefy tłumienia (np. 10% siatki z każdej strony)
+    int mask_width = static_cast<int>(mask_fraction * np);
+    
+    for (int i = 0; i < nx; ++i) {
+        for (int j = 0; j < np; ++j) {
+            double factor = 1.0;
+            
+            // Lewa strona (j bliskie 0)
+            if (j < mask_width) {
+                double t = static_cast<double>(j) / mask_width;
+                factor = 0.5 * (1.0 - std::cos(M_PI * t)); // cosine window
+            }
+            // Prawa strona (j bliskie np-1)
+            else if (j >= np - mask_width) {
+                double t = static_cast<double>(np - 1 - j) / mask_width;
+                factor = 0.5 * (1.0 - std::cos(M_PI * t));
+            }
+            
+            data[i][j] *= factor;
+        }
+    }
+}
+
+void PhaseSpace::applyPositionMask(ComplexMatrix& data, double mask_fraction) {
+    int nx = config_.gridX;
+    int np = config_.gridP;
+    int mask_width = static_cast<int>(mask_fraction * nx);
+    
+    for (int i = 0; i < nx; ++i) {
+        double factor = 1.0;
+        if (i < mask_width) {
+            double t = static_cast<double>(i) / mask_width;
+            factor = 0.5 * (1.0 - std::cos(M_PI * t));
+        } else if (i >= nx - mask_width) {
+            double t = static_cast<double>(nx - 1 - i) / mask_width;
+            factor = 0.5 * (1.0 - std::cos(M_PI * t));
+        }
+        for (int j = 0; j < np; ++j) {
+            data[i][j] *= factor;
+        }
+    }
+}

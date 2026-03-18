@@ -13,14 +13,14 @@ set palette rgbformulae 33,13,10
 
 # Axis limits as requested
 set xrange [-5:5]
-set yrange [-15:15]
+set yrange [-20:20]
 
 set xlabel 'x'
 set ylabel 'p' 
 set colorbox
 
-# File pattern - modify this list based on your actual files
-do for [step=0:1500:5] {
+# File pattern - modify this list based on your actual files wigner_00000000000
+do for [step=0:3000:10] {
     filename = sprintf("build/output/wigner_%011d.dat", step)
 
 #    filename = "build/output/".word(files,i)
