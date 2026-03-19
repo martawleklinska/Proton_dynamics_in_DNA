@@ -206,3 +206,24 @@ void PhaseSpace::applyPositionMask(ComplexMatrix& data, double mask_fraction) {
         }
     }
 }
+
+void PhaseSpace::enforceZeroBoundary(ComplexMatrix& data, int x_border, int p_border) {
+    int nx = config_.gridX;
+    int np = config_.gridP;
+    
+    // Zeruj brzegi w p (górny i dolny)
+    for (int i = 0; i < nx; ++i) {
+        for (int j = 0; j < p_border; ++j) {
+            data[i][j]        = Complex(0.0, 0.0);
+            data[i][np-1-j]   = Complex(0.0, 0.0);
+        }
+    }
+    
+    // Zeruj brzegi w x (lewy i prawy)
+    for (int j = 0; j < np; ++j) {
+        for (int i = 0; i < x_border; ++i) {
+            data[i][j]        = Complex(0.0, 0.0);
+            data[nx-1-i][j]   = Complex(0.0, 0.0);
+        }
+    }
+}

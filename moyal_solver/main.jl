@@ -140,7 +140,9 @@ function create_wigner_animation()
                       titlesize = 35,
                       limits = ((-10., 10.), (-20., 20.)),
                       xlabelsize = 35,
-                      ylabelsize = 35)
+                      ylabelsize = 35,
+                      xticklabelsize = 20,
+                      yticklabelsize = 20)
         
         hm_snap = try
             heatmap!(ax_snap, x_unique, p_unique, W_vis,
@@ -210,10 +212,10 @@ function create_nonclassicality_plot()
         println("Created directory: $nonclass_dir")
     end
     
-    save(nonclass_filename, fig)
+    # save(nonclass_filename, fig)
     return fig
 end
-# create_nonclassicality_plot()
+create_nonclassicality_plot()
 ##
 alpha = 1.963
 a4 = 0.0207
@@ -341,49 +343,3 @@ function get_exp_vals()
 end
 
 # get_exp_vals()
-## create trajectory of xp values
-function get_traj_of_exp_vals()
-    x_unique = range(-3, 3, 300)
-    p_unique = range(-10., 10., 200)
-    v_unique = x_unique./alpha
-    
-    t = 0.0  
-    Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
-    m = 1836
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-    
-    Emin = 0
-    Emax = 0 + 0.1  
-    levels = range(Emin, Emax, length=25)
-    
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-
-    data = readdlm("moyal_solver/build/output/stats.dat", skipstart = 1)
-    t = data[:, 2]
-    x = data[:, 3]
-    p = data[:, 4]
-    
-    fig = Figure(size=(800, 500))
-    
-    ax2 = Axis(fig[1,1], 
-               xlabel = L"x", 
-               ylabel = L"p",
-               title = L"\text{Hamiltonian w przestrzeni fazowej}",
-               xlabelsize = 25,
-               ylabelsize = 25, titlesize = 25,
-               xticklabelsize = 20, yticklabelsize = 20)
-    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5)
-    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych")
-    
-    # scatter!(ax2, [-4.0], [1.15], color=:green, markersize=15, label="warunek początkowy")
-    axislegend(ax2, position=:lb, framevisible = false, labelsize = 20)
-    
-
-    display(fig)
-    # save("moyal_solver/graphics/trajectory.pdf", fig)
-    return fig
-end
-# get_traj_of_exp_vals()
-
-
-## how in an efficient way plot gifs?

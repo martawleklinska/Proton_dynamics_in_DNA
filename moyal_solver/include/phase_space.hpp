@@ -57,6 +57,8 @@
         void applyMomentumMask(ComplexMatrix& data, double mask_fraction = 0.1);
         void applyPositionMask(ComplexMatrix& data, double mask_fraction = 0.1);
 
+        void enforceZeroBoundary(ComplexMatrix& data, int x_border, int p_border);
+
     private:
         void initializeGrids();     //!< initialize: resize position, momentum and ffts grids
         void setupFFT();            //!< allocate momory for each plan
