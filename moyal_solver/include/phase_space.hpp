@@ -23,8 +23,11 @@
         fftw_plan fft_x_forward_, fft_x_backward_;
         fftw_plan fft_p_forward_, fft_p_backward_;
 
-        fftw_complex* work_x_;
-        fftw_complex* work_p_;
+        fftw_complex* work_x_in;
+        fftw_complex* work_p_in;
+
+        fftw_complex* work_x_out;
+        fftw_complex* work_p_out;
 
     public:
         explicit PhaseSpace(const MoyalConfig& config);

@@ -33,7 +33,7 @@ class HarmonicPotential : public Potential {
     public:
     double mass_ = 1;
     double omega_ = 1;
-    double center_ = 0.5;
+    double center_ = 0.0;
         double operator()(double x, double t = 0.0) const override {
             double dx = x - center_;
             return 0.5 * mass_ * omega_ * omega_ * dx * dx;
@@ -42,38 +42,6 @@ class HarmonicPotential : public Potential {
         std::unique_ptr<Potential> clone() const override {
             return std::make_unique<HarmonicPotential>();
         }
-};
-
-/**
- * @brief DK potential exp
- */
-class OGPotential : public Potential {
-    public:
-        double operator()(double x, double t = 0.0) const override {
-            return 0.008 * std::exp(-std::pow(x + 200.0, 2) / 250.);
-        }
-        std::unique_ptr<Potential> clone() const override {
-            return std::make_unique<OGPotential>();
-        }
-};
-/**
- * @brief Duffing potential
- */
-class Duffing : public Potential {
-public:
-    double alpha = -5e-1;
-    double beta  =  1e-3;
-    double gamma =  0.5;
-    double omega =  1.0e-1;
-
-
-    double operator()(double x, double t = 0.0) const override {
-        return 0.5*alpha*x*x + 0.25*beta*x*x*x*x - x*gamma * std::cos(omega*t);  
-    }
-    
-    std::unique_ptr<Potential> clone() const override {
-        return std::make_unique<Duffing>();
-    }
 };
 
 /**
@@ -119,6 +87,19 @@ class SlocombeGC : public Potential {
             return V1 * (exp1 - 2 * exp2) + V2 * (exp3 - 2 * exp4) + const_term;
         }
         std::unique_ptr<Potential> clone() const override {
-            return std::make_unique<GodbeerAT>();
+            return std::make_unique<SlocombeGC>();
         }
+};
+/**
+ * @brief free particle potential
+ */
+class FreeParticle : public Potential {
+public:
+    double operator()(double x, double t = 0.0) const override {
+        return 0.0; 
+    }
+    
+    std::unique_ptr<Potential> clone() const override {
+        return std::make_unique<FreeParticle>();
+    }
 };

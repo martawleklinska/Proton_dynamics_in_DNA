@@ -58,7 +58,7 @@ function create_wigner_animation()
     end
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
     
-    animation_files = wigner_files[1:7:end]
+    animation_files = wigner_files[1:1:end]
     n_frames = length(animation_files)
         
     fig = Figure(size = (900, 700), fontsize = 16)
@@ -79,19 +79,9 @@ function create_wigner_animation()
                       colormap = :RdBu,
                       colorrange = (w_min, w_max))
 
-    try
-        Colorbar(fig[1, 2], hm, label = L"\varrho(x,p,t)", labelsize = 25)
-    catch e
-        println("Warning: Could not create colorbar: $e")
-    end
+    Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
     
     gif_filename = "moyal_solver/graphics/wigner_evolution_GC.gif"
-    
-    gif_dir = dirname(gif_filename)
-    if !isdir(gif_dir)
-        mkpath(gif_dir)
-        println("Created directory: $gif_dir")
-    end
     
     record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
         filename = animation_files[frame_idx]
@@ -118,7 +108,13 @@ function create_wigner_animation()
             println("Warning: Error processing frame $frame_idx ($filename): $e")
         end
     end
-    
+    return wigner_files
+end
+
+create_wigner_animation()
+##
+function get_snapshots()
+    wigner_files = create_wigner_animation()
     snapshot_files = wigner_files[1:max(1, length(wigner_files)÷10):end]  
     
     for (i, filename) in enumerate(snapshot_files)
@@ -156,7 +152,7 @@ function create_wigner_animation()
         end
         
         try
-            Colorbar(fig_snap[1, 2], hm_snap, label = L"\varrho(x,p,t)", labelsize = 35)
+            Colorbar(fig_snap[1, 2], hm_snap, label = L"\varrho(x,p;t)", labelsize = 35)
         catch e
             println("Warning: Could not create colorbar for snapshot $i: $e")
         end
@@ -177,8 +173,6 @@ function create_wigner_animation()
     println("\nVisualization complete!")
     return fig, gif_filename
 end
-
-create_wigner_animation()
 ##
 
 function create_nonclassicality_plot()

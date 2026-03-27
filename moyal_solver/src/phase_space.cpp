@@ -15,8 +15,10 @@ PhaseSpace::~PhaseSpace() {
     if (fft_x_backward_) fftw_destroy_plan(fft_x_backward_);
     if (fft_p_forward_) fftw_destroy_plan(fft_p_forward_);
     if (fft_p_backward_) fftw_destroy_plan(fft_p_backward_);
-    if (work_x_) fftw_free(work_x_);
-    if (work_p_) fftw_free(work_p_);
+    if (work_x_in) fftw_free(work_x_in);
+    if (work_p_in) fftw_free(work_p_in);
+    if (work_x_out) fftw_free(work_x_out);
+    if (work_p_out) fftw_free(work_p_out);
 }
 
 void PhaseSpace::initializeGrids() {
@@ -67,32 +69,34 @@ void PhaseSpace::setupFFT() {
     if (res == 0){
         throw std::runtime_error("FFTW thread init failed");
     }
-    work_x_ = fftw_alloc_complex(config_.gridX);
-    work_p_ = fftw_alloc_complex(config_.gridP);
+    work_x_in = fftw_alloc_complex(config_.gridX);
+    work_p_in = fftw_alloc_complex(config_.gridP);
     
-    if (!work_x_ || !work_p_) {
+    work_x_out = fftw_alloc_complex(config_.gridX);
+    work_p_out = fftw_alloc_complex(config_.gridP);
+    if (!work_x_in || !work_p_in) {
         throw std::runtime_error("Failed to allocate FFTW memory");
     }
     fftw_plan_with_nthreads(FFTW_N_THREADS);
-    fft_x_forward_ = fftw_plan_dft_1d(config_.gridX, work_x_, work_x_, 
+    fft_x_forward_ = fftw_plan_dft_1d(config_.gridX, work_x_in, work_x_out, 
                                      FFTW_FORWARD, FFTW_MEASURE);
     fftw_plan_with_nthreads(FFTW_N_THREADS);
-    fft_x_backward_ = fftw_plan_dft_1d(config_.gridX, work_x_, work_x_, 
+    fft_x_backward_ = fftw_plan_dft_1d(config_.gridX, work_x_in, work_x_out, 
                                       FFTW_BACKWARD, FFTW_MEASURE);
     
     fftw_plan_with_nthreads(FFTW_N_THREADS);
-    fft_p_forward_ = fftw_plan_dft_1d(config_.gridP, work_p_, work_p_, 
+    fft_p_forward_ = fftw_plan_dft_1d(config_.gridP, work_p_in, work_p_out, 
                                      FFTW_FORWARD, FFTW_MEASURE);
     fftw_plan_with_nthreads(FFTW_N_THREADS);
-    fft_p_backward_ = fftw_plan_dft_1d(config_.gridP, work_p_, work_p_, 
+    fft_p_backward_ = fftw_plan_dft_1d(config_.gridP, work_p_in, work_p_out, 
                                       FFTW_BACKWARD, FFTW_MEASURE);
 }
 
 void PhaseSpace::fft_x(ComplexMatrix& data, bool forward) {
     for (int j = 0; j < config_.gridP; ++j) {
         for (int i = 0; i < config_.gridX; ++i) {
-            work_x_[i][0] = data[i][j].real();
-            work_x_[i][1] = data[i][j].imag();
+            work_x_in[i][0] = data[i][j].real();
+            work_x_in[i][1] = data[i][j].imag();
         }
         
         if (forward) {
@@ -100,13 +104,13 @@ void PhaseSpace::fft_x(ComplexMatrix& data, bool forward) {
         } else {
             fftw_execute(fft_x_backward_);
             for (int i = 0; i < config_.gridX; ++i) {
-                work_x_[i][0] /= config_.gridX;
-                work_x_[i][1] /= config_.gridX;
+                work_x_out[i][0] /= config_.gridX;
+                work_x_out[i][1] /= config_.gridX;
             }
         }
         
         for (int i = 0; i < config_.gridX; ++i) {
-            data[i][j] = Complex(work_x_[i][0], work_x_[i][1]);
+            data[i][j] = Complex(work_x_out[i][0], work_x_out[i][1]);
         }
     }
 }
@@ -114,8 +118,8 @@ void PhaseSpace::fft_x(ComplexMatrix& data, bool forward) {
 void PhaseSpace::fft_p(ComplexMatrix& data, bool forward) {
     for (int i = 0; i < config_.gridX; ++i) {
         for (int j = 0; j < config_.gridP; ++j) {
-            work_p_[j][0] = data[i][j].real();
-            work_p_[j][1] = data[i][j].imag();
+            work_p_in[j][0] = data[i][j].real();
+            work_p_in[j][1] = data[i][j].imag();
         }
         
         if (forward) {
@@ -123,13 +127,13 @@ void PhaseSpace::fft_p(ComplexMatrix& data, bool forward) {
         } else {
             fftw_execute(fft_p_backward_);
             for (int j = 0; j < config_.gridP; ++j) {
-                work_p_[j][0] /= config_.gridP;
-                work_p_[j][1] /= config_.gridP;
+                work_p_out[j][0] /= config_.gridP;
+                work_p_out[j][1] /= config_.gridP;
             }
         }
         
         for (int j = 0; j < config_.gridP; ++j) {
-            data[i][j] = Complex(work_p_[j][0], work_p_[j][1]);
+            data[i][j] = Complex(work_p_out[j][0], work_p_out[j][1]);
         }
     }
 }

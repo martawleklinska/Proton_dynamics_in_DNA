@@ -15,7 +15,7 @@ int main() {
         std::cout << "Initial conditions: x0 = " << config.x_init 
                   << ", p0 = " << config.p_init << "\n\n";
         
-        auto potential = std::make_unique<GodbeerAT>();
+        auto potential = std::make_unique<HarmonicPotential>();
         
         MoyalSolver solver(config, std::move(potential));
         

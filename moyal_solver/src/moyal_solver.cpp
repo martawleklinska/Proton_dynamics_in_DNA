@@ -14,7 +14,6 @@ MoyalSolver::MoyalSolver(const MoyalConfig& config, std::unique_ptr<Potential> p
                                                            std::move(potential), 
                                                            config_.hbar);
 }
-// move semantics
 void MoyalSolver::setInitialCondition(const std::function<Complex(double, double)>& init_func) {
     wigner_.initializeFromFunction(init_func);
 }
@@ -57,10 +56,6 @@ void MoyalSolver::evolveOneStep() {
 void MoyalSolver::strangSplittingStep() {
     auto& wigner_data = wigner_.data();
     
-    // Zastosuj maski PRZED krokiem - tłumi artefakty przy brzegach
-    phase_space_.applyMomentumMask(wigner_data);
-    phase_space_.applyPositionMask(wigner_data);
-    
     // 1. Pół kroku kinetycznego
     phase_space_.fft_x(wigner_data, true);
     kinetic_prop_->apply(wigner_data, config_.dt / 2.0);
@@ -75,6 +70,12 @@ void MoyalSolver::strangSplittingStep() {
     phase_space_.fft_x(wigner_data, true);
     kinetic_prop_->apply(wigner_data, config_.dt / 2.0);
     phase_space_.fft_x(wigner_data, false);
+
+    int nx = phase_space_.gridX();
+    int np = phase_space_.gridP();
+    for (int i = 0; i < nx; ++i)
+        for (int j = 0; j < np; ++j)
+            wigner_data[i][j] = Complex(wigner_data[i][j].real(), 0.0);
 }
 
 void MoyalSolver::computeExpectationValues(double& mean_x, double& mean_p, 
@@ -172,6 +173,5 @@ double MoyalSolver::calculateNonclassicalityParameter() const {
         }
     }
     
-    // \delta(t) = \iint |W(x,p,t)| dx dp - 1
     return integral - 1.0;
 }
