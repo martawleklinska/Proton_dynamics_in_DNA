@@ -152,8 +152,11 @@ void WDF::saveToFile(const std::string& filename) const {
     
     for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < np; ++j) {
-            file << X[i][j] << " " << P[i][j] << " " 
-                 << wigner_[i][j].real() << " " << wigner_[i][j].imag() << "\n";
+            if (X[i][j] >= -10.0 && X[i][j] <= 10.0 && 
+                P[i][j] >= -10.0 && P[i][j] <= 10.0) {
+                file << X[i][j] << " " << P[i][j] << " " 
+                     << wigner_[i][j].real() << " " << wigner_[i][j].imag() << "\n";
+            }
         }
         // file << "\n";
     }
