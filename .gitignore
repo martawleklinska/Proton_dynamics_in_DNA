@@ -3,6 +3,5 @@ data/
 notes.txt
 build/
 build2/
-cmake/
 .vscode/
 *.gif
