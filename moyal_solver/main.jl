@@ -3,7 +3,7 @@ using StatsBase
 
 const dt = .5  # time step 
 
-function create_wigner_animation()
+function create_wigner_animation(run_sim::Bool = true)
     output_paths = [
         # "build/output/",  
         # "masters/moyal_solver/build/output/",               
@@ -20,19 +20,10 @@ function create_wigner_animation()
         end
     end
     
-    if output_dir === nothing
-        error("Output directory not found! Run the C++ program first.")
-    end
-
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
     
-    if isempty(wigner_files)
-        error("No Wigner function files found in $output_dir")
-    end
-    
-    println("Found $(length(wigner_files)) Wigner function files")
     
     first_file = joinpath(output_dir, wigner_files[1])
     data = readdlm(first_file)
@@ -42,11 +33,6 @@ function create_wigner_animation()
     p_unique = sort(unique(p_coords))
     nx, np = length(x_unique), length(p_unique)
     
-    println("=== Grid size: $nx × $np")
-    println("=== x range: $(round(minimum(x_unique), digits=2)) to $(round(maximum(x_unique), digits=2))")
-    println("=== p range: $(round(minimum(p_unique), digits=2)) to $(round(maximum(p_unique), digits=2))")
-    
-    println("Calculating Wigner function range...")
     w_min, w_max = Inf, -Inf
     sample_files = wigner_files[1:max(1, length(wigner_files)÷10):end]  
     
@@ -66,58 +52,138 @@ function create_wigner_animation()
     time_obs = Observable("t = 0.0")
     wigner_obs = Observable(zeros(nx, np))
     
-    ax = Axis(fig[1, 1], 
-              xlabel = L"\text{Położenie}\; x", 
-              ylabel = L"\text{Pęd} \;p",
-              title = time_obs,
-              titlesize = 25,
-              limits = ((-10., 10.), (-20., 20.)),
-              xlabelsize = 25,
-              ylabelsize = 25)
-    
-    hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
-                      colormap = :RdBu,
-                      colorrange = (w_min, w_max))
-
-    Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
-    
-    gif_filename = "moyal_solver/graphics/wigner_evolution_GC.gif"
-    
-    record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
-        filename = animation_files[frame_idx]
+    if run_sim
+        ax = Axis(fig[1, 1], 
+                xlabel = L"\text{Położenie}\; x", 
+                ylabel = L"\text{Pęd} \;p",
+                title = time_obs,
+                titlesize = 25,
+                limits = ((-10., 10.), (-10., 10.)),
+                xlabelsize = 25,
+                ylabelsize = 25)
         
-        try
-            step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
-            step = parse(Int, step_str)
-            time_val = step * dt
+        hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
+                        colormap = :Blues,
+                        colorrange = (w_min, w_max))
+
+        Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
+        
+        gif_filename = "moyal_solver/graphics/wdf_harmonic_oscillator.gif"
+        # record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
+        #     filename = animation_files[frame_idx]
             
-            data = readdlm(joinpath(output_dir, filename))
-            wigner_real = data[:, 3]
-            
-            W = reshape(wigner_real, np, nx)'
-            W_vis = sign.(W) .* abs.(W).^(1/3)  
-            
-            time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
-            wigner_obs[] = W_vis
-            
-            if frame_idx % max(1, n_frames÷20) == 0
-                progress = round(100 * frame_idx / n_frames, digits=1)
-                println("Progress: $progress% (frame $frame_idx/$n_frames)")
-            end
-        catch e
-            println("Warning: Error processing frame $frame_idx ($filename): $e")
-        end
+        #     try
+        #         step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
+        #         step = parse(Int, step_str)
+        #         time_val = step * dt
+                
+        #         data = readdlm(joinpath(output_dir, filename))
+        #         wigner_real = data[:, 3]
+                
+        #         W = reshape(wigner_real, np, nx)'
+        #         W_vis = sign.(W) .* abs.(W).^(1/3)  
+                
+        #         time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
+        #         wigner_obs[] = W_vis
+                
+        #         if frame_idx % max(1, n_frames÷20) == 0
+        #             progress = round(100 * frame_idx / n_frames, digits=1)
+        #             println("Progress: $progress% (frame $frame_idx/$n_frames)")
+        #         end
+        #     catch e
+        #         println("Warning: Error processing frame $frame_idx ($filename): $e")
+        #     end
+        # end
     end
     return wigner_files
 end
 
-create_wigner_animation()
+# create_wigner_animation()
 ##
-function get_snapshots()
+function get_snapshots(;is_harmonic::Bool = false, is_gc::Bool = false, is_at::Bool = true)
+    # =============== finding build data ==============
+    output_paths = [
+        "moyal_solver/build/output/"             
+    ]
+    
+    output_dir = nothing
+    for path in output_paths
+        if isdir(path)
+            output_dir = path
+            println("Found output directory at: $path")
+            break
+        end
+    end
+    
+    # don't run the simulation - get the files
+    wigner_files = create_wigner_animation(false)
+    first_file = joinpath(output_dir, wigner_files[1])
+    data = readdlm(first_file)
+    x_coords, p_coords = data[:, 1], data[:, 2]
+    
+    # get contour hamiltonian
+    x_unique = sort(unique(x_coords))
+    p_unique = sort(unique(p_coords))
+    nx, np = length(x_unique), length(p_unique)
+
+    if is_harmonic
+        a2, a1, a0 = 1/2, 0.0, 0.0
+        Emin = 0
+        Emax = 0 + 20.0  
+        levels = range(Emin, Emax, length=11)
+        Vx = @. a2 * x_unique^2 + a1 * x_unique + a0 
+        m = 1.
+    elseif is_gc
+        V1 = 0.1617
+        V2 = 0.082
+        a1 = 0.305
+        a2 = 0.755
+        r1 = -2.7
+        r2 = 2.1
+        m = 1836
+        
+        t = 0.0  
+        Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
+        H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+        
+        Emin = 0
+        Emax = 0 + 0.1  
+        levels = range(Emin, Emax, length=25)
+        m=1836
+    elseif is_at
+        v_unique = x_unique./alpha
+        
+        t = 0.0  
+        Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
+        m = 1836
+        H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+        
+        Emin = 0
+        Emax = 0 + 0.1  
+        levels = range(Emin, Emax, length=25)
+        m=1836
+    end
+    
+    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+
+    # finding wdf ranges
+    w_min, w_max = Inf, -Inf
+    sample_files = wigner_files[1:max(1, length(wigner_files)÷10):end]  
+    
+    for filename in sample_files
+        data = readdlm(joinpath(output_dir, filename))
+        w_vals = data[:, 3]
+        w_min = min(w_min, minimum(w_vals))
+        w_max = max(w_max, maximum(w_vals))
+    end
+    println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
+    
     wigner_files = create_wigner_animation()
     snapshot_files = wigner_files[1:max(1, length(wigner_files)÷10):end]  
     
+    ## snapshots
     for (i, filename) in enumerate(snapshot_files)
+        
         step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
         step = parse(Int, step_str)
         time_val = step * dt
@@ -125,30 +191,36 @@ function get_snapshots()
         data = readdlm(joinpath(output_dir, filename))
         wigner_real = data[:, 3]
         
-        W = reshape(wigner_real, np, nx)'
-        W_vis = sign.(W) .* abs.(W).^(1/3)
-        
+        W_vis = reshape(wigner_real, np, nx)'
+    
         fig_snap = Figure(size = (1000, 600))
         ax_snap = Axis(fig_snap[1, 1],
-                      xlabel = L"\text{Położenie } x",
-                      ylabel = L"\text{Pęd } p", 
-                      title = @sprintf("Funkcja Wignera (t = %.3f)", time_val),
+                      xlabel = L"x",
+                      ylabel = L"p", 
+                      title = @sprintf("𝘵 = %.3f a.u.", time_val),
                       titlesize = 35,
-                      limits = ((-10., 10.), (-20., 20.)),
-                      xlabelsize = 35,
-                      ylabelsize = 35,
-                      xticklabelsize = 20,
-                      yticklabelsize = 20)
+                      limits = ((-5., 5.), (-5., 5.)),
+                      xlabelsize = 40,
+                      ylabelsize = 40,
+                      xticklabelsize = 35,
+                      yticklabelsize = 35)
         
         hm_snap = try
             heatmap!(ax_snap, x_unique, p_unique, W_vis,
-                    colormap = :RdBu,
+                    colormap = :Blues,
                     colorrange = (w_min, w_max))
         catch e
             println("Warning: Using fallback colormap for snapshot $i: $e")
             heatmap!(ax_snap, x_unique, p_unique, W_vis,
-                    colormap = :RuBu,
-                    colorrange = (w_min, w_max))
+                                colormap = :viridis,
+                                colorrange = (w_min, w_max))
+        end
+        
+        try
+            contour!(ax_snap, x_unique, p_unique, H', levels=levels, 
+                    linewidth=1.5, color=:gray, alpha=0.1)
+        catch e
+            println("Warning: Could not add contour lines for snapshot $i: $e")
         end
         
         try
@@ -157,8 +229,13 @@ function get_snapshots()
             println("Warning: Could not create colorbar for snapshot $i: $e")
         end
         
-        png_filename = @sprintf("moyal_solver/graphics/GC/wigner_snapshot_t%.3f.png", time_val)
-        
+        if is_harmonic
+            png_filename = @sprintf("moyal_solver/graphics/HO/wigner_snapshot_t%.3f.png", time_val)
+        elseif is_gc
+            png_filename = @sprintf("moyal_solver/graphics/GC/wigner_snapshot_t%.3f.png", time_val)
+        elseif is_at
+            png_filename = @sprintf("moyal_solver/graphics/AT/wigner_snapshot_t%.3f.png", time_val)
+        end
 
         png_dir = dirname(png_filename)
         if !isdir(png_dir)
@@ -171,8 +248,8 @@ function get_snapshots()
     end
     
     println("\nVisualization complete!")
-    return fig, gif_filename
 end
+get_snapshots(;is_harmonic = true, is_gc = false, is_at = false)
 ##
 
 function create_nonclassicality_plot()

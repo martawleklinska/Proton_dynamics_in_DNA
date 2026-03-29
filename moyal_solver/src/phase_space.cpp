@@ -2,7 +2,7 @@
 #include <cmath>
 #include <stdexcept>
 
-const int FFTW_N_THREADS = 8;
+const int FFTW_N_THREADS = 6;
 
 PhaseSpace::PhaseSpace(const MoyalConfig& config) : config_(config) {
     initializeGrids();
