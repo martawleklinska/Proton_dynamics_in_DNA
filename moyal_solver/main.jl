@@ -1,7 +1,7 @@
 using CairoMakie, DelimitedFiles, Printf
 using StatsBase
 
-const dt = .5  # time step 
+const dt = .1  # time step 
 
 function create_wigner_animation(run_sim::Bool = true)
     output_paths = [
@@ -63,12 +63,12 @@ function create_wigner_animation(run_sim::Bool = true)
                 ylabelsize = 25)
         
         hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
-                        colormap = :Blues,
+                        colormap = :RdBu,
                         colorrange = (w_min, w_max))
 
         Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
         
-        gif_filename = "moyal_solver/graphics/wdf_harmonic_oscillator.gif"
+        gif_filename = "moyal_solver/graphics/AT/wdf_evolution.gif"
         # record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
         #     filename = animation_files[frame_idx]
             
@@ -81,7 +81,7 @@ function create_wigner_animation(run_sim::Bool = true)
         #         wigner_real = data[:, 3]
                 
         #         W = reshape(wigner_real, np, nx)'
-        #         W_vis = sign.(W) .* abs.(W).^(1/3)  
+        #         W_vis = W
                 
         #         time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
         #         wigner_obs[] = W_vis
@@ -100,158 +100,111 @@ end
 
 # create_wigner_animation()
 ##
-function get_snapshots(;is_harmonic::Bool = false, is_gc::Bool = false, is_at::Bool = true)
-    # =============== finding build data ==============
-    output_paths = [
-        "moyal_solver/build/output/"             
-    ]
-    
-    output_dir = nothing
-    for path in output_paths
-        if isdir(path)
-            output_dir = path
-            println("Found output directory at: $path")
-            break
-        end
-    end
-    
-    # don't run the simulation - get the files
-    wigner_files = create_wigner_animation(false)
-    first_file = joinpath(output_dir, wigner_files[1])
-    data = readdlm(first_file)
-    x_coords, p_coords = data[:, 1], data[:, 2]
-    
-    # get contour hamiltonian
-    x_unique = sort(unique(x_coords))
-    p_unique = sort(unique(p_coords))
-    nx, np = length(x_unique), length(p_unique)
+function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
 
+    output_dir = "moyal_solver/build/output/"
+    isdir(output_dir) || error("Output directory not found: $output_dir")
+
+    wigner_files = create_wigner_animation(false)
+    isempty(wigner_files) && error("No Wigner files found")
+
+    # ── wczytanie siatki z pierwszego pliku ──────────────────────────────────
+    data      = readdlm(joinpath(output_dir, wigner_files[1]))
+    x_unique  = sort(unique(data[:, 1]))
+    p_unique  = sort(unique(data[:, 2]))
+    nx, np    = length(x_unique), length(p_unique)
+
+    # ── potencjał i poziomice Hamiltonianu ───────────────────────────────────
     if is_harmonic
-        a2, a1, a0 = 1/2, 0.0, 0.0
-        Emin = 0
-        Emax = 0 + 20.0  
-        levels = range(Emin, Emax, length=11)
-        Vx = @. a2 * x_unique^2 + a1 * x_unique + a0 
-        m = 1.
+        m      = 1.0
+        Vx     = @. 0.5 * x_unique^2
+        levels = range(0, 20, length=11)
+        label  = "HO"
     elseif is_gc
-        V1 = 0.1617
-        V2 = 0.082
-        a1 = 0.305
-        a2 = 0.755
-        r1 = -2.7
-        r2 = 2.1
-        m = 1836
-        
-        t = 0.0  
-        Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
-        H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-        
-        Emin = 0
-        Emax = 0 + 0.1  
-        levels = range(Emin, Emax, length=25)
-        m=1836
+        m  = 1836.0
+        V1, V2      = 0.1617, 0.082
+        a1_gc, a2_gc = 0.305, 0.755
+        r1, r2      = -2.7, 2.1
+        Vx     = @. V1*(exp(-2a1_gc*(x_unique-r1)) - 2exp(-a1_gc*(x_unique-r1))) +
+                    V2*(exp(-2a2_gc*(r2-x_unique)) - 2exp(-a2_gc*(r2-x_unique))) + 0.166 + 0.00019
+        levels = range(0, 0.1, length=25)
+        label  = "GC"
     elseif is_at
-        v_unique = x_unique./alpha
-        
-        t = 0.0  
-        Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
-        m = 1836
-        H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-        
-        Emin = 0
-        Emax = 0 + 0.1  
-        levels = range(Emin, Emax, length=25)
-        m=1836
+        m  = 1836.0
+        alpha = 1.963
+        a4 = 0.0207
+        a3 = -0.0053
+        a2 = -0.0414
+        a1 = 0.0158
+        a0 = 0.0312
+        v  = x_unique ./ alpha
+        Vx = @. a4*v^4 + a3*v^3 + a2*v^2 + a1*v + a0
+        levels = range(0, 0.1, length=22)
+        label  = "AT"
+    else
+        error("Wybierz jeden potencjał: is_harmonic, is_gc lub is_at")
     end
-    
+
     H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
 
-    # finding wdf ranges
-    w_min, w_max = Inf, -Inf
-    sample_files = wigner_files[1:max(1, length(wigner_files)÷10):end]  
-    
-    for filename in sample_files
-        data = readdlm(joinpath(output_dir, filename))
-        w_vals = data[:, 3]
-        w_min = min(w_min, minimum(w_vals))
-        w_max = max(w_max, maximum(w_vals))
-    end
+    # ── zakres kolorów z próbki plików ───────────────────────────────────────
+    sample = wigner_files[1:max(1, length(wigner_files)÷10):end]
+    w_min, w_max = mapreduce(
+        f -> extrema(readdlm(joinpath(output_dir, f))[:, 3]),
+        (a, b) -> (min(a[1], b[1]), max(a[2], b[2])),
+        sample
+    )
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
-    
+
+    # ── cztery pierwsze snapshoty ─────────────────────────────────────────────
     wigner_files = create_wigner_animation()
-    snapshot_files = wigner_files[1:max(1, length(wigner_files)÷10):end]  
-    
-    ## snapshots
-    for (i, filename) in enumerate(snapshot_files)
-        
-        step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
-        step = parse(Int, step_str)
-        time_val = step * dt
-        
-        data = readdlm(joinpath(output_dir, filename))
-        wigner_real = data[:, 3]
-        
-        W_vis = reshape(wigner_real, np, nx)'
-    
-        fig_snap = Figure(size = (1000, 600))
-        ax_snap = Axis(fig_snap[1, 1],
-                      xlabel = L"x",
-                      ylabel = L"p", 
-                      title = @sprintf("𝘵 = %.3f a.u.", time_val),
-                      titlesize = 35,
-                      limits = ((-5., 5.), (-5., 5.)),
-                      xlabelsize = 40,
-                      ylabelsize = 40,
-                      xticklabelsize = 35,
-                      yticklabelsize = 35)
-        
-        hm_snap = try
-            heatmap!(ax_snap, x_unique, p_unique, W_vis,
-                    colormap = :Blues,
-                    colorrange = (w_min, w_max))
-        catch e
-            println("Warning: Using fallback colormap for snapshot $i: $e")
-            heatmap!(ax_snap, x_unique, p_unique, W_vis,
-                                colormap = :viridis,
-                                colorrange = (w_min, w_max))
-        end
-        
-        try
-            contour!(ax_snap, x_unique, p_unique, H', levels=levels, 
-                    linewidth=1.5, color=:gray, alpha=0.1)
-        catch e
-            println("Warning: Could not add contour lines for snapshot $i: $e")
-        end
-        
-        try
-            Colorbar(fig_snap[1, 2], hm_snap, label = L"\varrho(x,p;t)", labelsize = 35)
-        catch e
-            println("Warning: Could not create colorbar for snapshot $i: $e")
-        end
-        
-        if is_harmonic
-            png_filename = @sprintf("moyal_solver/graphics/HO/wigner_snapshot_t%.3f.png", time_val)
-        elseif is_gc
-            png_filename = @sprintf("moyal_solver/graphics/GC/wigner_snapshot_t%.3f.png", time_val)
-        elseif is_at
-            png_filename = @sprintf("moyal_solver/graphics/AT/wigner_snapshot_t%.3f.png", time_val)
-        end
+    snap4        = wigner_files[1:200:min(800, length(wigner_files))]
 
-        png_dir = dirname(png_filename)
-        if !isdir(png_dir)
-            mkpath(png_dir)
-            println("Created directory: $png_dir")
-        end
-        
-        save(png_filename, fig_snap, px_per_unit = 2)  
+    fig = Figure(size=(1000, 800))
 
+    for (idx, filename) in enumerate(snap4)
+        row, col = divrem(idx - 1, 2) .+ 1          # (1,1) (1,2) (2,1) (2,2)
+        titles = [L"t = 0.0 \text{ a.u.}", L"t = 200.0\text{ a.u.}", L"t = 400.0\text{ a.u.}", L"t = 800.0\text{ a.u.}"]
+        step     = parse(Int, match(r"wigner_(\d+)\.dat", filename).captures[1])
+        t_val    = step * dt
+        W        = reshape(readdlm(joinpath(output_dir, filename))[:, 3], np, nx)'
+
+        ax = Axis(fig[row, col],
+                  xlabel       = L"x \; (\text{a.u.})",
+                  ylabel       = L"p \; (\text{a.u.})",
+                  title        = titles[idx],
+                  titlesize    = 30,
+                  xlabelsize   = 30,
+                  ylabelsize   = 30,
+                  xticklabelsize = 25,
+                  yticklabelsize = 25,
+                  limits       = ((-3., 3.), (-10., 10.)))
+
+        hm = heatmap!(ax, x_unique, p_unique, W;
+                      colormap   = :RdBu,
+                      colorrange = (-0.32, 0.32))
+
+        contour!(ax, x_unique, p_unique, H';
+                 levels    = levels,
+                 linewidth = 1.2,
+                 color     = :gray,
+                 alpha     = 0.4)
+
+        # colorbar tylko przy prawej kolumnie
+        col == 2 && Colorbar(fig[row, col+1], hm;
+                             label     = L"\varrho(x,p;\,t)\; (\text{a.u.})",
+                             labelsize = 30)
     end
-    
-    println("\nVisualization complete!")
-end
-get_snapshots(;is_harmonic = true, is_gc = false, is_at = false)
-##
 
+    out_dir  = "moyal_solver/graphics/$label"
+    mkpath(out_dir)
+    out_file = joinpath(out_dir, "wigner_snapshots_2x2.pdf")
+    save(out_file, fig; px_per_unit=2)
+    println("Zapisano: $out_file")
+end
+
+plot_wigner_snapshots(; is_harmonic=false, is_gc=false, is_at=true)##
+##
 function create_nonclassicality_plot()
     stats_file = "moyal_solver/build/output/stats.dat"
     if !isfile(stats_file)
@@ -336,8 +289,6 @@ function plot_Godbeer_AT_potential()
 end
 
 # plot_Godbeer_AT_potential()
-
-
 ##
 
 function plot_Slocombe_GC_potential()
@@ -409,8 +360,8 @@ function get_exp_vals()
     lines!(ax, t, x, color = ax1_color, linewidth = 4)
     lines!(ax2, t, p, color = ax2_color, linewidth = 4)
     
-    display(fig)
-    # save("moyal_solver/graphics/xp_exp_val.pdf", fig)
+    # display(fig)
+    save("moyal_solver/graphics/HO/exp_vals.pdf", fig)
 end
 
-# get_exp_vals()
+get_exp_vals()

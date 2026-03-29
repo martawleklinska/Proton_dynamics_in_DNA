@@ -5,3 +5,5 @@ build/
 build2/
 .vscode/
 *.gif
+build_godbeer_less_barrier/
+build2_HO/
