@@ -1,9 +1,9 @@
 using CairoMakie, DelimitedFiles, Printf
 using StatsBase
 
-const dt = .1  # time step 
+const dt = .01  # time step 
 
-function create_wigner_animation()
+function create_wigner_animation(run_sim::Bool = true)
     output_paths = [
         # "build/output/",  
         # "masters/moyal_solver/build/output/",               
@@ -44,58 +44,61 @@ function create_wigner_animation()
     end
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
     
-    animation_files = wigner_files[1:1:40]
+    animation_files = wigner_files[1:1:end]
     n_frames = length(animation_files)
         
     fig = Figure(size = (900, 700), fontsize = 16)
     
     time_obs = Observable("t = 0.0")
     wigner_obs = Observable(zeros(nx, np))
-
-    ax = Axis(fig[1, 1], 
-            xlabel = L"\text{Położenie}\; x", 
-            ylabel = L"\text{Pęd} \;p",
-            title = time_obs,
-            titlesize = 25,
-            limits = ((-10., 10.), (-10., 10.)),
-            xlabelsize = 25,
-            ylabelsize = 25)
     
-    hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
-                    colormap = :RdBu,
-                    colorrange = (w_min, w_max))
-    Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
-    
-    gif_filename = "moyal_solver/graphics/AT/wdf_evolution.gif"
-    record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
-        filename = animation_files[frame_idx]
+    if run_sim
+        ax = Axis(fig[1, 1], 
+                xlabel = L"\text{Położenie}\; x", 
+                ylabel = L"\text{Pęd} \;p",
+                title = time_obs,
+                titlesize = 25,
+                limits = ((-10., 10.), (-10., 10.)),
+                xlabelsize = 25,
+                ylabelsize = 25)
         
-        try
-            step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
-            step = parse(Int, step_str)
-            time_val = step * dt
+        hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
+                        colormap = :Blues,
+                        colorrange = (w_min, w_max))
+
+        Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
+        
+        gif_filename = "moyal_solver/graphics/wdf_harmonic_oscillator.gif"
+        # record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
+        #     filename = animation_files[frame_idx]
             
-            data = readdlm(joinpath(output_dir, filename))
-            wigner_real = data[:, 3]
-            
-            W = reshape(wigner_real, np, nx)'
-            W_vis = W
-            
-            time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
-            wigner_obs[] = W_vis
-            
-            if frame_idx % max(1, n_frames÷20) == 0
-                progress = round(100 * frame_idx / n_frames, digits=1)
-                println("Progress: $progress% (frame $frame_idx/$n_frames)")
-            end
-        catch e
-            println("Warning: Error processing frame $frame_idx ($filename): $e")
-        end
+        #     try
+        #         step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
+        #         step = parse(Int, step_str)
+        #         time_val = step * dt
+                
+        #         data = readdlm(joinpath(output_dir, filename))
+        #         wigner_real = data[:, 3]
+                
+        #         W = reshape(wigner_real, np, nx)'
+        #         W_vis = sign.(W) .* abs.(W).^(1/3)  
+                
+        #         time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
+        #         wigner_obs[] = W_vis
+                
+        #         if frame_idx % max(1, n_frames÷20) == 0
+        #             progress = round(100 * frame_idx / n_frames, digits=1)
+        #             println("Progress: $progress% (frame $frame_idx/$n_frames)")
+        #         end
+        #     catch e
+        #         println("Warning: Error processing frame $frame_idx ($filename): $e")
+        #     end
+        # end
     end
     return wigner_files
 end
 
-create_wigner_animation()
+# create_wigner_animation()
 ##
 function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
 
@@ -137,7 +140,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
         a0 = 0.0312
         v  = x_unique ./ alpha
         Vx = @. a4*v^4 + a3*v^3 + a2*v^2 + a1*v + a0
-        levels = range(0, 0.1, length=22)
+        levels = range(0, 0.1, length=21)
         label  = "AT"
     else
         error("Wybierz jeden potencjał: is_harmonic, is_gc lub is_at")
@@ -168,6 +171,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
         step     = parse(Int, match(r"wigner_(\d+)\.dat", filename).captures[1])
         t_val    = step * dt
         W        = reshape(readdlm(joinpath(output_dir, filename))[:, 3], np, nx)'
+        W = sign.(W).*abs.(W).^(1/3)
 
         ax = Axis(fig[row, col],
                   xlabel       = L"x \; (\text{a.u.})",
@@ -178,7 +182,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
                   ylabelsize   = 30,
                   xticklabelsize = 25,
                   yticklabelsize = 25,
-                  limits       = ((-3., 3.), (-10., 17.)))
+                  limits       = ((-3., 3.), (-12., 12.)))
 
         hm = heatmap!(ax, x_unique, p_unique, W;
                       colormap   = :RdBu,
@@ -190,7 +194,6 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
                  color     = :gray,
                  alpha     = 0.4)
 
-        # colorbar tylko przy prawej kolumnie
         col == 2 && Colorbar(fig[row, col+1], hm;
                              label     = L"\varrho(x,p;\,t)\; (\text{a.u.})",
                              labelsize = 30)
@@ -198,7 +201,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
 
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
-    out_file = joinpath(out_dir, "wigner_snapshots_2x2_higher_p0.pdf")
+    out_file = joinpath(out_dir, "wigner_snapshots_2x2_higher_p0_sqrt.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
 end

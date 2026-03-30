@@ -34,13 +34,13 @@ struct MoyalConfig {
     double mass = 1836.0;
     
     double dt = 0.1;      
-    int timeSteps = 9000;
+    int timeSteps = 100000;
     
     double x_init  = -1.0;
     double p_init  = 6.0;
     double sigma_x = 0.5;
     double sigma_p = 1.0;
     
-    int outputEvery = 100;
+    int outputEvery = 200;
     std::string outputDir = "./output/";
 };
