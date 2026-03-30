@@ -37,7 +37,7 @@ struct MoyalConfig {
     int timeSteps = 900;
     
     double x_init  = -1.0;
-    double p_init  = 4.0;
+    double p_init  = 6.0;
     double sigma_x = 0.5;
     double sigma_p = 1.0;
     
