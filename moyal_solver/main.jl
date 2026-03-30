@@ -105,8 +105,9 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     output_dir = "moyal_solver/build/output/"
     isdir(output_dir) || error("Output directory not found: $output_dir")
 
-    wigner_files = create_wigner_animation(false)
-    isempty(wigner_files) && error("No Wigner files found")
+    wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
+                         readdir(output_dir))
+    sort!(wigner_files)
 
     # ── wczytanie siatki z pierwszego pliku ──────────────────────────────────
     data      = readdlm(joinpath(output_dir, wigner_files[1]))
@@ -157,7 +158,9 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
 
     # ── cztery pierwsze snapshoty ─────────────────────────────────────────────
-    wigner_files = create_wigner_animation()
+    wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
+                         readdir(output_dir))
+    sort!(wigner_files)
     snap4        = wigner_files[1:200:min(800, length(wigner_files))]
 
     fig = Figure(size=(1000, 800))
@@ -178,7 +181,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
                   ylabelsize   = 30,
                   xticklabelsize = 25,
                   yticklabelsize = 25,
-                  limits       = ((-3., 3.), (-10., 10.)))
+                  limits       = ((-3., 3.), (-10., 17.)))
 
         hm = heatmap!(ax, x_unique, p_unique, W;
                       colormap   = :RdBu,
@@ -198,7 +201,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
 
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
-    out_file = joinpath(out_dir, "wigner_snapshots_2x2.pdf")
+    out_file = joinpath(out_dir, "wigner_snapshots_2x2_higher_p0.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
 end
