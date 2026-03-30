@@ -158,7 +158,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
-    snap4        = wigner_files[1:200:min(800, length(wigner_files))]
+    snap4        = wigner_files[1:20:min(80, length(wigner_files))]
 
     fig = Figure(size=(1000, 800))
 
