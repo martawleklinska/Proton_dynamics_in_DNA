@@ -44,7 +44,7 @@ function create_wigner_animation()
     end
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
     
-    animation_files = wigner_files[1:1:100]
+    animation_files = wigner_files[1:1:40]
     n_frames = length(animation_files)
         
     fig = Figure(size = (900, 700), fontsize = 16)
