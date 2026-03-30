@@ -3,7 +3,7 @@ using StatsBase
 
 const dt = .1  # time step 
 
-function create_wigner_animation(run_sim::Bool = true)
+function create_wigner_animation()
     output_paths = [
         # "build/output/",  
         # "masters/moyal_solver/build/output/",               
@@ -44,61 +44,58 @@ function create_wigner_animation(run_sim::Bool = true)
     end
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
     
-    animation_files = wigner_files[1:1:end]
+    animation_files = wigner_files[1:1:100]
     n_frames = length(animation_files)
         
     fig = Figure(size = (900, 700), fontsize = 16)
     
     time_obs = Observable("t = 0.0")
     wigner_obs = Observable(zeros(nx, np))
-    
-    if run_sim
-        ax = Axis(fig[1, 1], 
-                xlabel = L"\text{Położenie}\; x", 
-                ylabel = L"\text{Pęd} \;p",
-                title = time_obs,
-                titlesize = 25,
-                limits = ((-10., 10.), (-10., 10.)),
-                xlabelsize = 25,
-                ylabelsize = 25)
-        
-        hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
-                        colormap = :RdBu,
-                        colorrange = (w_min, w_max))
 
-        Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
+    ax = Axis(fig[1, 1], 
+            xlabel = L"\text{Położenie}\; x", 
+            ylabel = L"\text{Pęd} \;p",
+            title = time_obs,
+            titlesize = 25,
+            limits = ((-10., 10.), (-10., 10.)),
+            xlabelsize = 25,
+            ylabelsize = 25)
+    
+    hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
+                    colormap = :RdBu,
+                    colorrange = (w_min, w_max))
+    Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
+    
+    gif_filename = "moyal_solver/graphics/AT/wdf_evolution.gif"
+    record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
+        filename = animation_files[frame_idx]
         
-        gif_filename = "moyal_solver/graphics/AT/wdf_evolution.gif"
-        # record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
-        #     filename = animation_files[frame_idx]
+        try
+            step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
+            step = parse(Int, step_str)
+            time_val = step * dt
             
-        #     try
-        #         step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
-        #         step = parse(Int, step_str)
-        #         time_val = step * dt
-                
-        #         data = readdlm(joinpath(output_dir, filename))
-        #         wigner_real = data[:, 3]
-                
-        #         W = reshape(wigner_real, np, nx)'
-        #         W_vis = W
-                
-        #         time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
-        #         wigner_obs[] = W_vis
-                
-        #         if frame_idx % max(1, n_frames÷20) == 0
-        #             progress = round(100 * frame_idx / n_frames, digits=1)
-        #             println("Progress: $progress% (frame $frame_idx/$n_frames)")
-        #         end
-        #     catch e
-        #         println("Warning: Error processing frame $frame_idx ($filename): $e")
-        #     end
-        # end
+            data = readdlm(joinpath(output_dir, filename))
+            wigner_real = data[:, 3]
+            
+            W = reshape(wigner_real, np, nx)'
+            W_vis = W
+            
+            time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
+            wigner_obs[] = W_vis
+            
+            if frame_idx % max(1, n_frames÷20) == 0
+                progress = round(100 * frame_idx / n_frames, digits=1)
+                println("Progress: $progress% (frame $frame_idx/$n_frames)")
+            end
+        catch e
+            println("Warning: Error processing frame $frame_idx ($filename): $e")
+        end
     end
     return wigner_files
 end
 
-# create_wigner_animation()
+create_wigner_animation()
 ##
 function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
 
