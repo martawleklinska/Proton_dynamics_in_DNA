@@ -1,7 +1,7 @@
 using CairoMakie, DelimitedFiles, Printf
 using StatsBase
 
-const dt = .01  # time step 
+const dt = .1  # time step 
 
 function create_wigner_animation(run_sim::Bool = true)
     output_paths = [
@@ -58,47 +58,46 @@ function create_wigner_animation(run_sim::Bool = true)
                 ylabel = L"\text{Pęd} \;p",
                 title = time_obs,
                 titlesize = 25,
-                limits = ((-10., 10.), (-10., 10.)),
+                limits = ((-5., 5.), (-10., 10.)),
                 xlabelsize = 25,
                 ylabelsize = 25)
         
         hm = heatmap!(ax, x_unique, p_unique, wigner_obs,
-                        colormap = :Blues,
-                        colorrange = (w_min, w_max))
+                        colormap = :RdBu,
+                        colorrange = (-0.2, 0.2))
 
         Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
         
-        gif_filename = "moyal_solver/graphics/wdf_harmonic_oscillator.gif"
-        # record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
-        #     filename = animation_files[frame_idx]
+        gif_filename = "moyal_solver/graphics/AT/wdf_evolution.gif"
+        record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
+            filename = animation_files[frame_idx]
             
-        #     try
-        #         step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
-        #         step = parse(Int, step_str)
-        #         time_val = step * dt
+            try
+                step_str = match(r"wigner_(\d+)\.dat", filename).captures[1]
+                step = parse(Int, step_str)
+                time_val = step * dt
                 
-        #         data = readdlm(joinpath(output_dir, filename))
-        #         wigner_real = data[:, 3]
+                data = readdlm(joinpath(output_dir, filename))
+                wigner_real = data[:, 3]
                 
-        #         W = reshape(wigner_real, np, nx)'
-        #         W_vis = sign.(W) .* abs.(W).^(1/3)  
+                W = reshape(wigner_real, np, nx)'
+                W_vis = W
                 
-        #         time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
-        #         wigner_obs[] = W_vis
+                time_obs[] = @sprintf("Funkcja Wignera (t = %.3f)", time_val)
+                wigner_obs[] = W_vis
                 
-        #         if frame_idx % max(1, n_frames÷20) == 0
-        #             progress = round(100 * frame_idx / n_frames, digits=1)
-        #             println("Progress: $progress% (frame $frame_idx/$n_frames)")
-        #         end
-        #     catch e
-        #         println("Warning: Error processing frame $frame_idx ($filename): $e")
-        #     end
-        # end
+                if frame_idx % max(1, n_frames÷20) == 0
+                    progress = round(100 * frame_idx / n_frames, digits=1)
+                    println("Progress: $progress% (frame $frame_idx/$n_frames)")
+                end
+            catch e
+                println("Warning: Error processing frame $frame_idx ($filename): $e")
+            end
+        end
     end
-    return wigner_files
 end
 
-# create_wigner_animation()
+create_wigner_animation()
 ##
 function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
 
@@ -161,17 +160,24 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
-    snap4        = wigner_files[1:20:min(80, length(wigner_files))]
+    snap4        = wigner_files[1:100:min(600, length(wigner_files))]
+    # snap4        = wigner_files[1:200:min(800, length(wigner_files))]
 
-    fig = Figure(size=(1000, 800))
+    fig = Figure(size=(1000, 1200))
+    β = 0.01
+    wigner_scale = ReversibleScale(
+        w ->  asinh(w / β) / log(10),   # forward:  W  → kolor
+        w -> β * sinh(log(10) * w)       # inverse:  kolor → W (dla colorbar)
+    )
 
     for (idx, filename) in enumerate(snap4)
         row, col = divrem(idx - 1, 2) .+ 1          # (1,1) (1,2) (2,1) (2,2)
-        titles = [L"t = 0.0 \text{ a.u.}", L"t = 200.0\text{ a.u.}", L"t = 400.0\text{ a.u.}", L"t = 800.0\text{ a.u.}"]
+        titles = [L"t = 0.0 \text{ a.u.}", L"t = 2\times 10^3 \text{ a.u.}", L"t = 4\times 10^3\text{ a.u.}", L"t = 6\times 10^3\text{ a.u.}", L"t = 8\times 10^3\text{ a.u.}", L"t = 10\times 10^3\text{ a.u.}"]
+        # titles = [L"t = 0.0 \text{ a.u.}", L"t = 200.0 \text{ a.u.}", L"t = 400.0\text{ a.u.}", L"t = 600.0\text{ a.u.}"]
+        
         step     = parse(Int, match(r"wigner_(\d+)\.dat", filename).captures[1])
         t_val    = step * dt
         W        = reshape(readdlm(joinpath(output_dir, filename))[:, 3], np, nx)'
-        W = sign.(W).*abs.(W).^(1/3)
 
         ax = Axis(fig[row, col],
                   xlabel       = L"x \; (\text{a.u.})",
@@ -180,28 +186,32 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
                   titlesize    = 30,
                   xlabelsize   = 30,
                   ylabelsize   = 30,
+                  yticks = [-10., -5., 0., 5., 10.],
+                  xticks = [-2., 0., 2.],
                   xticklabelsize = 25,
                   yticklabelsize = 25,
                   limits       = ((-3., 3.), (-12., 12.)))
 
         hm = heatmap!(ax, x_unique, p_unique, W;
-                      colormap   = :RdBu,
+        colormap   = :RdBu,
+        colorscale = wigner_scale,
                       colorrange = (-0.32, 0.32))
 
         contour!(ax, x_unique, p_unique, H';
-                 levels    = levels,
+                 levels    = levels,      
                  linewidth = 1.2,
                  color     = :gray,
                  alpha     = 0.4)
 
         col == 2 && Colorbar(fig[row, col+1], hm;
                              label     = L"\varrho(x,p;\,t)\; (\text{a.u.})",
-                             labelsize = 30)
+                             labelsize = 30, ticks = [-0.2, -0.1, 0.0, 0.1, 0.2], ticklabelsize = 25)
     end
 
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
     out_file = joinpath(out_dir, "wigner_snapshots_2x2_higher_p0_sqrt.pdf")
+    # out_file = joinpath(out_dir, "wigner_snapshots_2x2_long_sim.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
 end
@@ -221,18 +231,18 @@ function create_nonclassicality_plot()
     
     fig = Figure(size = (1000, 500))
     ax = Axis(fig[1, 1],
-              xlabel = L"t \text{ (a.u.)} ",
+              xlabel = L"t \;\; (10^3\text{ a.u.)} ",
               ylabel = L"\delta_{\mathrm{W}}(t)",
             #   title = L"\text{Ewolucja nieklasyczności stanu kwantowego}",
               titlesize = 30,
                       xlabelsize = 30,
                       ylabelsize = 30, xticklabelsize = 25, yticklabelsize = 25)
     
-    lines!(ax, t, delta, linewidth = 6, color = :purple)
+    lines!(ax, t/1e03, delta, linewidth = 6, color = :purple)
     hlines!(ax, [0], color = :black, linestyle = :dash, alpha = 0.5)
     
     # Create directory if it doesn't exist
-    nonclass_filename = "moyal_solver/graphics/nonclassicality.png"
+    nonclass_filename = "moyal_solver/graphics/AT/nonclassicality.pdf"
     nonclass_dir = dirname(nonclass_filename)
     if !isdir(nonclass_dir)
         mkpath(nonclass_dir)
@@ -349,7 +359,7 @@ function get_exp_vals()
     
     fig = Figure(size = (1000, 500))
     ax1_color = :royalblue1
-    ax = Axis(fig[1,1], xlabel = L"t\; (\text{a.u.})", ylabel = L"\langle x\rangle\; (\text{a.u.})", 
+    ax = Axis(fig[1,1], xlabel = L"t\; \;(10^3\text{a.u.})", ylabel = L"\langle x\rangle\; (\text{a.u.})", 
     xlabelsize = 40, ylabelsize = 40, xticklabelsize = 30, yticklabelsize = 30,
     leftspinecolor = ax1_color, yaxisposition = :left, 
     yticklabelcolor = ax1_color, ylabelcolor = ax1_color, ytickcolor = ax1_color)
@@ -360,11 +370,11 @@ function get_exp_vals()
     hidexdecorations!(ax2)
     # ylims!(ax2, 8, 10)
     
-    lines!(ax, t, x, color = ax1_color, linewidth = 4)
-    lines!(ax2, t, p, color = ax2_color, linewidth = 4)
+    lines!(ax, t/1e03, x, color = ax1_color, linewidth = 4)
+    lines!(ax2, t/1e03, p, color = ax2_color, linewidth = 4)
     
     # display(fig)
-    save("moyal_solver/graphics/HO/exp_vals.pdf", fig)
+    save("moyal_solver/graphics/AT/exp_vals.pdf", fig)
 end
 
 get_exp_vals()
