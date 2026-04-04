@@ -58,7 +58,7 @@ function create_wigner_animation(run_sim::Bool = true)
                 ylabel = L"\text{Pęd} \;p",
                 title = time_obs,
                 titlesize = 25,
-                limits = ((-5., 5.), (-10., 10.)),
+                limits = ((-5., 5.), (-12., 12.)),
                 xlabelsize = 25,
                 ylabelsize = 25)
         
@@ -68,7 +68,7 @@ function create_wigner_animation(run_sim::Bool = true)
 
         Colorbar(fig[1, 2], hm, label = L"\varrho(x,p; t)", labelsize = 25)
         
-        gif_filename = "moyal_solver/graphics/AT/wdf_evolution.gif"
+        gif_filename = "moyal_solver/graphics/GC/wdf_evolution.gif"
         record(fig, gif_filename, 1:n_frames; framerate = 8) do frame_idx
             filename = animation_files[frame_idx]
             
@@ -160,7 +160,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
-    snap4        = wigner_files[1:100:min(600, length(wigner_files))]
+    snap4        = wigner_files[1:25:min(600, length(wigner_files))]
     # snap4        = wigner_files[1:200:min(800, length(wigner_files))]
 
     fig = Figure(size=(1000, 1200))
@@ -210,13 +210,13 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
 
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
-    out_file = joinpath(out_dir, "wigner_snapshots_2x2_higher_p0_sqrt.pdf")
+    out_file = joinpath(out_dir, "wigner_snapshots_2x2_sqrt.pdf")
     # out_file = joinpath(out_dir, "wigner_snapshots_2x2_long_sim.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
 end
 
-plot_wigner_snapshots(; is_harmonic=false, is_gc=false, is_at=true)##
+plot_wigner_snapshots(; is_harmonic=false, is_gc=true, is_at=false)##
 ##
 function create_nonclassicality_plot()
     stats_file = "moyal_solver/build/output/stats.dat"
@@ -242,7 +242,7 @@ function create_nonclassicality_plot()
     hlines!(ax, [0], color = :black, linestyle = :dash, alpha = 0.5)
     
     # Create directory if it doesn't exist
-    nonclass_filename = "moyal_solver/graphics/AT/nonclassicality.pdf"
+    nonclass_filename = "moyal_solver/graphics/GC/nonclassicality.pdf"
     nonclass_dir = dirname(nonclass_filename)
     if !isdir(nonclass_dir)
         mkpath(nonclass_dir)
@@ -374,7 +374,7 @@ function get_exp_vals()
     lines!(ax2, t/1e03, p, color = ax2_color, linewidth = 4)
     
     # display(fig)
-    save("moyal_solver/graphics/AT/exp_vals.pdf", fig)
+    save("moyal_solver/graphics/GC/exp_vals.pdf", fig)
 end
 
 get_exp_vals()
