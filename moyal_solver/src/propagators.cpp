@@ -6,7 +6,7 @@ KineticPropagator::KineticPropagator(const PhaseSpace& phase_space, double mass)
 }
 
 void KineticPropagator::computePropagator(double dt) {
-    const auto& KX = phase_space_.KX();  // lambda — częstotliwości po FFT_x
+    const auto& KX = phase_space_.KX();  // lambda - częstotliwości po FFT_x
     const auto& P  = phase_space_.P();   // rzeczywisty pęd
 
     int nx = phase_space_.gridX();
@@ -14,8 +14,7 @@ void KineticPropagator::computePropagator(double dt) {
 
     for (int i = 0; i < nx; i++) {
         for (int j = 0; j < np; j++) {
-            // Równanie Moyala: dW/dt = -(p/m) d/dx W
-            // Po FFT_x: dW/dt = -i*(p*lambda/m)*W
+            // i * dt * p * lambda / m / hbar
             double phase = dt * P[i][j] * KX[i][j] / mass_;
             propagator_matrix_[i][j] = std::exp(Complex(0.0, phase));
         }

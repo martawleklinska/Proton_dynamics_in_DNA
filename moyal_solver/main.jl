@@ -1,5 +1,6 @@
 using CairoMakie, DelimitedFiles, Printf
 using StatsBase
+using GLMakie
 
 const dt = .1  # time step 
 
@@ -166,8 +167,8 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     fig = Figure(size=(1000, 1200))
     β = 0.01
     wigner_scale = ReversibleScale(
-        w ->  asinh(w / β) / log(10),   # forward:  W  → kolor
-        w -> β * sinh(log(10) * w)       # inverse:  kolor → W (dla colorbar)
+        w ->  asinh(w / β) / log(10),  
+        w -> β * sinh(log(10) * w)     
     )
 
     for (idx, filename) in enumerate(snap4)
@@ -378,3 +379,96 @@ function get_exp_vals()
 end
 
 get_exp_vals()
+
+## 3 D WDF 
+
+function plot_wigner_3d(x_coords, p_coords, W;
+                        scaling_factor=0.3,
+                        colorrange=(-0.32, 0.32))
+    
+    α = scaling_factor
+    W_scaled = sign.(W) .* asinh.(abs.(W) / α) * α
+
+    GLMakie.activate!()
+    
+    β = 0.01
+    wigner_scale = ReversibleScale(
+        w ->  asinh(w / β) / log(10),   
+        w -> β * sinh(log(10) * w)      
+    )
+
+    fig = Figure(size=(1200, 800))
+    
+    ax3d = Axis3(fig[1, 1],
+                 xlabel=L"x \; (\text{a.u.})",
+                 ylabel=L"p \; (\text{a.u.})",
+                 zlabel=L"\varrho(x,p; t) \; (\text{a.u.})",
+                 xticklabelsize = 25, yticklabelsize = 25, zticklabelsize = 25,
+                 title=L"t = 9.25 \times 10^{5} \; \text{a.u.}",
+                 titlesize=30,
+                 zlabeloffset = 60,
+                 xlabelsize=30,
+                 ylabelsize=30,
+                 zlabelsize=30,
+                 limits = ((-2.95, 2.8), (-14.5, 14.5), (-0.32, 0.32)))
+    
+    surf = surface!(ax3d, x_coords, p_coords, W_scaled,
+                   colormap=:RdBu,
+                   colorscale = wigner_scale,
+                   colorrange=colorrange,
+                   shading=true,
+                   transparency=true,
+                   alpha=0.8)
+    
+    z_offset = -0.32
+    Z_flat = fill(z_offset, length(x_coords), length(p_coords))
+    heatmap_surf = surface!(ax3d, x_coords, p_coords, Z_flat,
+                           color=W_scaled,
+                           colorscale = wigner_scale,
+                           colormap=:RdBu,
+                           colorrange=colorrange,
+                           shading=false,
+                           transparency=false)
+    
+    
+    Colorbar(fig[1, 2], surf;
+             label=L"\varrho(x,p; t)",
+             labelsize=30, ticklabelsize = 25)
+
+    
+    return fig, ax3d
+end
+
+function load_and_plot_wigner_3d(filename; kwargs...)
+    data = readdlm(filename)
+    x_coords = data[:, 1]
+    p_coords = data[:, 2] 
+    wigner_real = data[:, 3]
+    
+    x_unique = sort(unique(x_coords))
+    p_unique = sort(unique(p_coords))
+    nx, np = length(x_unique), length(p_unique)
+    
+    W = reshape(wigner_real, np, nx)'
+
+    V1 = 0.1617
+    V2 = 0.082
+    a1 = 0.305
+    a2 = 0.755
+    r1 = -2.7
+    r2 = 2.1
+    m = 1836
+    
+    Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
+    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+    
+    time_match = match(r"wigner_(\d+\.?\d*)\.dat", basename(filename))
+    time_str = time_match !== nothing ? " (t = $(time_match.captures[1]))" : ""
+    title = "Wigner Distribution Function" * time_str
+    
+    return plot_wigner_3d(x_unique, p_unique, W;
+                          kwargs...)
+end
+
+fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_godbeer_higher_p0/output/wigner_00000092600.dat")
+save("moyal_solver/graphics/AT/WDF_3d.png", fig)
