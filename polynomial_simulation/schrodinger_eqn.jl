@@ -23,11 +23,11 @@ function model_gc(x)
     a_tau, b_tau, c_tau = 0.013406834311699567, -0.044575846347551726, 0.05473263795143025
 
     if x < -1.03
-        return a_can .* x .^ 2 + b_can .* x + c_can
+        return a_can .* x .^ 2 + b_can .* x + c_can .-0.0018
     elseif x < 1.15
-        return a_bar .* x .^ 2 + b_bar .* x + c_bar
+        return a_bar .* x .^ 2 + b_bar .* x + c_bar .-0.0018
     else 
-        return a_tau .* x .^ 2 + b_tau .* x + c_tau
+        return a_tau .* x .^ 2 + b_tau .* x + c_tau .-0.0018
     end
 end
 function get_potential_model(x; is_at=true)
@@ -162,9 +162,10 @@ function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
 
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"$E$ \text{ (a.u.)}",
         title = is_at ? L"\text{A-T: model harmoniczny}" : L"\text{G-C: model harmoniczny}",
-        limits = is_at ? ((-3.3, 2.9), (-0.005, 0.045)) : ((-4.3, 2.5), (-0.002, 0.032)),
+        limits = is_at ? ((-3.3, 2.9), (-0.002, 0.038)) : ((-4.3, 2.5), (-0.002, 0.03)),
         ylabelsize = 35, xlabelsize = 35, titlesize = 35,
         xticklabelsize = 25, yticklabelsize = 25)
+    ax.xticks = [-4, -2, 0, 2]
     ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=35,
         yticklabelsize = 25, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
     hidespines!(ax_wf)
@@ -172,7 +173,7 @@ function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
     cm = cgrad(:tab20c, 13)
     CairoMakie.lines!(ax, x, V, linewidth = 3.5, color = cm[1])
     
-    cm = cgrad(:YlGnBu, 18)
+    cm = cgrad(:bluegreenyellow, 14)
     for (i, E) in enumerate(energies)
         ψ = wavefuncs[:, i]
         CairoMakie.lines!(ax, x, E .+ ψ .* scale, linewidth=2., color = cm[i+1], label="ψ[$(i-1)]")
@@ -187,8 +188,8 @@ function plot_harmonic_solutions(scale=0.0006, is_at::Bool = true)
     # end
 
     # display(fig)
-    # filename = is_at ? "model_AT" : "model_GC"
-    # save("graphics/model/$filename.pdf", fig)
+    filename = is_at ? "model_AT" : "model_GC"
+    save("graphics/model/$filename.pdf", fig)
 end
 
 function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
@@ -200,7 +201,7 @@ function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
 
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"\text{Energy (a.u.)}",
         title = is_at ? L"\text{A-T: harmonic model}" : L"\text{G-C: harmonic model}",
-        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.032)),
+        limits = is_at ? ((-3.2, 3.0), (-0.002, 0.045)) : ((-4., 2.7), (-0.002, 0.032)),
         ylabelsize = 30, xlabelsize = 30, titlesize = 30,
         xticklabelsize = 20, yticklabelsize = 20)
     ax_wf = Axis(fig[1, 1], ylabel = L"|ψ(x)|^2 \text{ (arb. u.)}", ylabelsize=30,
@@ -210,7 +211,7 @@ function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
     cm = cgrad(:tab20c, 13)
     CairoMakie.lines!(ax, x, V, linewidth = 3.5, color = cm[1])
     
-    cm = cgrad(:YlGnBu, 13)
+    cm = cgrad(:bluegreenyellow, 13)
     for (i, E) in enumerate(ene_left)
         ψ = left_wf[:, i]
         ρ = conj(ψ) .*ψ
@@ -232,12 +233,12 @@ function plot_solutions_with_density(scale=0.0007, is_at::Bool = true)
 end
 
 ene_at, wf_at, x_at = solve_schrodinger_sum_harmonic(13, 1000, (-3.5, 3.), true)
-ene_at
-# plot_harmonic_solutions()
+# ene_at
+plot_harmonic_solutions()
 
 # g-C
-# ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
-# plot_harmonic_solutions(0.0004, false)
+ene_gc, wf_gc, x_gc = solve_schrodinger_sum_harmonic(14, 1000, (-4., 2.9), false)
+plot_harmonic_solutions(0.0004, false)
 
 ##
 # plot_harmonic_solutions()

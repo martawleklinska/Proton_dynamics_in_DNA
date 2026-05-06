@@ -161,7 +161,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
-    snap4        = wigner_files[1:25:min(600, length(wigner_files))]
+    snap4        = wigner_files[1:45:min(1000, length(wigner_files))]
     # snap4        = wigner_files[1:200:min(800, length(wigner_files))]
 
     fig = Figure(size=(1000, 1200))
@@ -191,7 +191,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
                   xticks = [-2., 0., 2.],
                   xticklabelsize = 25,
                   yticklabelsize = 25,
-                  limits       = ((-3., 3.), (-12., 12.)))
+                  limits       = ((-3.9, 2.4), (-15., 15.)))
 
         hm = heatmap!(ax, x_unique, p_unique, W;
         colormap   = :RdBu,
@@ -250,7 +250,7 @@ function create_nonclassicality_plot()
         println("Created directory: $nonclass_dir")
     end
     
-    # save(nonclass_filename, fig)
+    save(nonclass_filename, fig)
     return fig
 end
 create_nonclassicality_plot()
@@ -404,13 +404,15 @@ function plot_wigner_3d(x_coords, p_coords, W;
                  ylabel=L"p \; (\text{a.u.})",
                  zlabel=L"\varrho(x,p; t) \; (\text{a.u.})",
                  xticklabelsize = 25, yticklabelsize = 25, zticklabelsize = 25,
-                 title=L"t = 9.25 \times 10^{5} \; \text{a.u.}",
+                 title=L"t = 9.25 \times 10^{4} \; \text{a.u.}",
                  titlesize=30,
                  zlabeloffset = 60,
                  xlabelsize=30,
                  ylabelsize=30,
                  zlabelsize=30,
-                 limits = ((-2.95, 2.8), (-14.5, 14.5), (-0.32, 0.32)))
+                #  limits = ((-2.95, 2.8), (-14.5, 14.5), (-0.32, 0.32)),
+                 limits = ((-3.95, 2.45), (-14.5, 14.5), (-0.32, 0.32)),
+                 )
     
     surf = surface!(ax3d, x_coords, p_coords, W_scaled,
                    colormap=:RdBu,
@@ -470,5 +472,6 @@ function load_and_plot_wigner_3d(filename; kwargs...)
                           kwargs...)
 end
 
-fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_godbeer_higher_p0/output/wigner_00000092600.dat")
-save("moyal_solver/graphics/AT/WDF_3d.png", fig)
+# fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_godbeer_higher_p0/output/wigner_00000092600.dat")
+fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build/output/wigner_00000092500.dat")
+save("moyal_solver/graphics/GC/WDF_3d.png", fig)

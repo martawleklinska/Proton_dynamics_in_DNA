@@ -103,3 +103,88 @@ public:
         return std::make_unique<FreeParticle>();
     }
 };
+
+class ModelGC : public Potential {
+    private:
+    double a_can = 0.006457467585167605;
+    double b_can = 0.03131130708309966;
+    double c_can = 0.03979932858576989;
+
+    double a_bar = -0.006425438605566449;
+    double b_bar = 0.0038910266591298437;
+    double c_bar = 0.025223914926830745;
+
+    double a_tau = 0.013406834311699567;
+    double b_tau = -0.044575846347551726;
+    double c_tau = 0.05473263795143025;
+
+    public:
+        ModelGC() {};
+
+        double operator()(double x, double t = 0.0) const override {
+            if (x < -1.03){
+                return a_can * x * x + b_can * x + c_can;
+            }
+            else if (x < 1.15){
+                return a_bar * x * x + b_bar * x + c_bar;
+            }
+            else {
+                return a_tau * x * x + b_tau * x + c_tau;
+            } 
+        }
+
+        std::unique_ptr<Potential> clone() const override {
+            return std::make_unique<ModelGC>();
+        }
+};
+
+class ModelAT : public Potential {
+    private:
+    
+    double a_can = 0.01548757014342916;
+    double b_can = 0.0544195348802887;
+    double c_can = 0.04817678375503837;
+
+    double a_bar = -0.010377758242695038;
+    double b_bar = 0.007613726939775605;
+    double c_bar = 0.0310333936186076;
+
+    double a_tau = 0.0125386460155263;
+    double b_tau = -0.04565578211748337;
+    double c_tau = 0.0619375921034291;
+
+    public:
+        ModelAT() {};
+
+        double operator()(double x, double t = 0.0) const override {
+            if (x < -0.51){
+                return a_can * x * x + b_can * x + c_can;
+            }
+            else if (x < 1.21){
+                return a_bar * x * x + b_bar * x + c_bar;
+            }
+            else {
+                return a_tau * x * x + b_tau * x + c_tau;
+            } 
+        }
+
+        std::unique_ptr<Potential> clone() const override {
+            return std::make_unique<ModelAT>();
+        }
+};
+
+/*
+function model_gc(x)
+    a_can, b_can, c_can = 0.006457467585167605, 0.03131130708309966, 0.03979932858576989
+    a_bar, b_bar, c_bar = -0.006425438605566449, 0.0038910266591298437, 0.025223914926830745
+    a_tau, b_tau, c_tau = 0.013406834311699567, -0.044575846347551726, 0.05473263795143025
+
+    if x < -1.03
+        return a_can .* x .^ 2 + b_can .* x + c_can .-0.0018
+    elseif x < 1.15
+        return a_bar .* x .^ 2 + b_bar .* x + c_bar .-0.0018
+    else 
+        return a_tau .* x .^ 2 + b_tau .* x + c_tau .-0.0018
+    end
+end
+*/

@@ -91,9 +91,10 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
     fig = Figure(resolution = (800, 600))
     ax = Axis(fig[1, 1], xlabel = L"$x$ (a.u.)", ylabel = L"$E$ \text{ (a.u.)}",
         title = is_at ? L"\text{A-T}" : L"\text{G-C}",
-        limits = is_at ? ((-3.2, 3.0), (-0.005, 0.045)) : ((-4., 2.7), (-0.002, 0.035)),
+        limits = is_at ? ((-3.2, 3.0), (-0.002, 0.038)) : ((-4., 2.7), (-0.002, 0.032)),
         ylabelsize = 35, xlabelsize = 35, titlesize = 35,
         xticklabelsize = 25, yticklabelsize = 25)
+    ax.xticks = [-4, -2, 0, 2]
     ax_wf = Axis(fig[1, 1], ylabel = L"\psi(x) \text{ (arb. u.)}", ylabelsize=35,
         yticklabelsize = 25, yaxisposition = :right, limits = is_at ? ((-3.2, 3.0), (-1.2, 1.2)) : ((-4., 2.9), (-1.2, 1.2)))
     hidespines!(ax_wf)
@@ -107,14 +108,14 @@ function plot_solutions(ene, wavefuncs, x; scale=0.01, is_at::Bool = true)
         CairoMakie.lines!(ax, x, [E], linestyle=:dash, linewidth=1.5, label=false, color = cm[i+1]) 
     end
 
-    display(fig)
+    # display(fig)
     filename = is_at ? "fourth_order_wave_funcs_AT" : "morse_wave_funcs_GC"
-    # save("graphics/true_sim/$filename.pdf", fig)
+    save("graphics/true_sim/$filename.pdf", fig)
 end
 
-ene_at, wf_at, x_at = solve_schrodinger(12, 1000, (-3.5, 3.), true)
+ene_at, wf_at, x_at = solve_schrodinger(13, 1000, (-3.5, 3.), true)
 plot_solutions(ene_at, wf_at, x_at; scale=0.001, is_at = true)
 
 # ## g-C
-# ene_gc, wf_gc, x_gc = solve_schrodinger(12, 1000, (-4., 2.9), false)
-# plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)
+ene_gc, wf_gc, x_gc = solve_schrodinger(14, 1000, (-4., 2.9), false)
+plot_solutions(ene_gc, wf_gc, x_gc; scale = 0.001, is_at = false)

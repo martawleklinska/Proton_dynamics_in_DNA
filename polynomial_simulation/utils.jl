@@ -106,18 +106,23 @@ function energy_differences()
     ns_gc = 0:(n_gc-1)
 
     fig = Figure(resolution = (1000, 400))
-    ax1 = Axis(fig[1,1], xlabel = L"$n$", ylabel = L"$\Delta E \; (10^{-15} \; \text{a.u.})$", title = L"\text{A-T}",
+    ax1 = Axis(fig[1,1], xlabel = L"$n$", ylabel = L"$\Delta E \; (10^{-3} \; \text{a.u.})$", title = L"\text{A-T}",
                 xlabelsize = 28, ylabelsize = 28, titlesize = 28, xticklabelsize = 24, yticklabelsize = 24)
-    ax2 = Axis(fig[1,2], xlabel = L"$n$", ylabel = L"$\Delta E \; (10^{-15} \; \text{a.u.})$", title = L"\text{G-C}",
+    ax2 = Axis(fig[1,2], xlabel = L"$n$", ylabel = L"$\Delta E \; (10^{-3} \; \text{a.u.})$", title = L"\text{G-C}",
                 xlabelsize = 28, ylabelsize = 28, titlesize = 28, xticklabelsize = 24, yticklabelsize = 24)
-    ax1.yticks = [0, 1.0, 2.0, 3.0]
-    ax2.yticks = [0, 1, 2, 3]
-    scatter!(ax1, ns_at, abs.(ΔE_at).*1e15, marker = :circle, color = :violetred4, label = "ΔE (exact - HO)")
-    scatter!(ax2, ns_gc, abs.(ΔE_gc)*1e15, marker = :circle, color = :palegreen4, label = "ΔE (exact - HO)")
+    # ax1.yticks = [0, 1.0, 2.0, 3.0]
+    # ax2.yticks = [0, 1, 2, 3]
+    ax1.xticks = [0, 2, 4, 6, 8, 10, 12]
+    ax2.xticks = [0, 2, 4, 6, 8, 10, 12]
+    
+    scatter!(ax1, ns_at, abs.(ΔE_at).*1e03, marker = :circle, color = :violetred4, label = "ΔE (exact - HO)")
+    scatter!(ax2, ns_gc, abs.(ΔE_gc).*1e03, marker = :circle, color = :palegreen4, label = "ΔE (exact - HO)")
 
     save("graphics/energy_diff.pdf", fig)
+    # display(fig)
     return fig
 end
+energy_differences()
 
 function get_coth_approx()
     kb = 3.167e-6
