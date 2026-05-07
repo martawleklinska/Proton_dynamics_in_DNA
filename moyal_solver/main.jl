@@ -360,7 +360,7 @@ function get_exp_vals()
     
     fig = Figure(size = (1000, 500))
     ax1_color = :royalblue1
-    ax = Axis(fig[1,1], xlabel = L"t\; \;(10^3\text{a.u.})", ylabel = L"\langle x\rangle\; (\text{a.u.})", 
+    ax = Axis(fig[1,1], xlabel = L"t\; \;(10^3\text{ a.u.})", ylabel = L"\langle x\rangle\; (\text{a.u.})", 
     xlabelsize = 40, ylabelsize = 40, xticklabelsize = 30, yticklabelsize = 30,
     leftspinecolor = ax1_color, yaxisposition = :left, 
     yticklabelcolor = ax1_color, ylabelcolor = ax1_color, ytickcolor = ax1_color)
@@ -374,11 +374,59 @@ function get_exp_vals()
     lines!(ax, t/1e03, x, color = ax1_color, linewidth = 4)
     lines!(ax2, t/1e03, p, color = ax2_color, linewidth = 4)
     
-    # display(fig)
-    save("moyal_solver/graphics/GC/exp_vals.pdf", fig)
+    display(fig)
+    # save("moyal_solver/graphics/GC/exp_vals.pdf", fig)
 end
 
 get_exp_vals()
+
+## create trajectory of xp values
+function get_traj_of_exp_vals()
+    V1 = 0.1617
+    V2 = 0.082
+    a1 = 0.305
+    a2 = 0.755
+    r1 = -2.7
+    r2 = 2.1
+    m = 1836
+    x_unique = range(-3.8, 2.4, 300)
+    p_unique = range(-15.5, 15.5, 200)
+    
+    t = 0.0  
+    Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
+    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+    
+    Emin = 0
+    Emax = 0 + 0.1  
+    levels = range(Emin, Emax, length=25)
+    
+    data = readdlm("moyal_solver/build/output/stats.dat", skipstart = 1)
+    t = data[:, 2]
+    x = data[:, 3]
+    p = data[:, 4]
+    
+    fig = Figure(size=(800, 500))
+    
+    ax2 = Axis(fig[1,1], 
+               xlabel = L"x \; \text{(a.u.)}", 
+               ylabel = L"p \; (\text{a.u.})",
+               title = L"\text{G-C}",
+               xlabelsize = 25,
+               ylabelsize = 25, titlesize = 25,
+               xticklabelsize = 20, yticklabelsize = 20,
+               limits = ((-3.8, 2.3), (-14., 14.)))
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5)
+    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych")
+    
+    scatter!(ax2, [-1.1], [5.4], color=:green, markersize=15, label="centrum początkowego gaussianu")
+    Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 20, orientation = :horizontal)
+    
+
+    # display(fig)
+    save("moyal_solver/graphics/GC/trajectory.pdf", fig)
+    return fig
+end
+get_traj_of_exp_vals()
 
 ## 3 D WDF 
 

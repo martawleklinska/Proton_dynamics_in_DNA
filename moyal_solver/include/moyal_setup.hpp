@@ -34,7 +34,7 @@ struct MoyalConfig {
     double mass = 1836.0;
     
     double dt = 0.1;      
-    int timeSteps = 1000000;
+    int timeSteps = 100000;
     
     double x_init  = -1.0;
     double p_init  = 5.0;

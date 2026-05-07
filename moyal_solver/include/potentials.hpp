@@ -172,19 +172,3 @@ class ModelAT : public Potential {
             return std::make_unique<ModelAT>();
         }
 };
-
-/*
-function model_gc(x)
-    a_can, b_can, c_can = 0.006457467585167605, 0.03131130708309966, 0.03979932858576989
-    a_bar, b_bar, c_bar = -0.006425438605566449, 0.0038910266591298437, 0.025223914926830745
-    a_tau, b_tau, c_tau = 0.013406834311699567, -0.044575846347551726, 0.05473263795143025
-
-    if x < -1.03
-        return a_can .* x .^ 2 + b_can .* x + c_can .-0.0018
-    elseif x < 1.15
-        return a_bar .* x .^ 2 + b_bar .* x + c_bar .-0.0018
-    else 
-        return a_tau .* x .^ 2 + b_tau .* x + c_tau .-0.0018
-    end
-end
-*/
