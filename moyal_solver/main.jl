@@ -100,22 +100,52 @@ end
 
 create_wigner_animation()
 ##
-function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
+function model_at(x)
+    a_can, b_can, c_can = 0.01548757014342916, 0.0544195348802887, 0.04817678375503837
+    a_bar, b_bar, c_bar = -0.010377758242695038, 0.007613726939775605, 0.0310333936186076
+    a_tau, b_tau, c_tau = 0.0125386460155263, -0.04565578211748337, 0.0619375921034291
+    if x < -0.51
+        return a_can .* x .^ 2 + b_can .* x + c_can
+    elseif x < 1.21
+        return a_bar .* x .^ 2 + b_bar .* x + c_bar
+    else 
+        return a_tau .* x .^ 2 + b_tau .* x + c_tau
+    end
+end
 
-    output_dir = "moyal_solver/build/output/"
+function model_gc(x)
+    a_can, b_can, c_can = 0.006457467585167605, 0.03131130708309966, 0.03979932858576989
+    a_bar, b_bar, c_bar = -0.006425438605566449, 0.0038910266591298437, 0.025223914926830745
+    a_tau, b_tau, c_tau = 0.013406834311699567, -0.044575846347551726, 0.05473263795143025
+
+    if x < -1.03
+        return a_can .* x .^ 2 + b_can .* x + c_can .-0.0018
+    elseif x < 1.15
+        return a_bar .* x .^ 2 + b_bar .* x + c_bar .-0.0018
+    else 
+        return a_tau .* x .^ 2 + b_tau .* x + c_tau .-0.0018
+    end
+end
+##
+function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
+    if is_at
+        output_dir = "moyal_solver/build_at_model/output/"
+    elseif is_gc
+        output_dir = "moyal_solver/build_gc_model/output/"
+    end
     isdir(output_dir) || error("Output directory not found: $output_dir")
 
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
 
-    # ── wczytanie siatki z pierwszego pliku ──────────────────────────────────
+    # ======== wczytanie siatki z pierwszego pliku =================================
     data      = readdlm(joinpath(output_dir, wigner_files[1]))
     x_unique  = sort(unique(data[:, 1]))
     p_unique  = sort(unique(data[:, 2]))
     nx, np    = length(x_unique), length(p_unique)
 
-    # ── potencjał i poziomice Hamiltonianu ───────────────────────────────────
+    # ======== potencjał i poziomice Hamiltonianu ==============================
     if is_harmonic
         m      = 1.0
         Vx     = @. 0.5 * x_unique^2
@@ -128,27 +158,30 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
         r1, r2      = -2.7, 2.1
         Vx     = @. V1*(exp(-2a1_gc*(x_unique-r1)) - 2exp(-a1_gc*(x_unique-r1))) +
                     V2*(exp(-2a2_gc*(r2-x_unique)) - 2exp(-a2_gc*(r2-x_unique))) + 0.166 + 0.00019
-        levels = range(0, 0.1, length=25)
+        levels = range(0, 0.1, length=15)
         label  = "GC"
+        limits = ((-4., 2.7), (-11.5, 11.5))
+        potential(x) = model_gc(x)
     elseif is_at
         m  = 1836.0
-        alpha = 1.963
-        a4 = 0.0207
-        a3 = -0.0053
-        a2 = -0.0414
-        a1 = 0.0158
-        a0 = 0.0312
-        v  = x_unique ./ alpha
-        Vx = @. a4*v^4 + a3*v^3 + a2*v^2 + a1*v + a0
-        levels = range(0, 0.1, length=21)
+        # alpha = 1.963
+        # a4 = 0.0207
+        # a3 = -0.0053
+        # a2 = -0.0414
+        # a1 = 0.0158
+        # a0 = 0.0312
+        # v  = x_unique ./ alpha
+        # Vx = @. a4*v^4 + a3*v^3 + a2*v^2 + a1*v + a0
+        levels = range(0, 0.1, length=15)
         label  = "AT"
+        limits = ((-3.3, 2.85), (-12.5, 12.5))
+        potential(x) = model_at(x)
     else
         error("Wybierz jeden potencjał: is_harmonic, is_gc lub is_at")
     end
+    H = [(p^2)/(2m) + potential(x) for p in p_unique, x in x_unique]
 
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-
-    # ── zakres kolorów z próbki plików ───────────────────────────────────────
+    # =========== zakres kolorów z próbki plików ==========================
     sample = wigner_files[1:max(1, length(wigner_files)÷10):end]
     w_min, w_max = mapreduce(
         f -> extrema(readdlm(joinpath(output_dir, f))[:, 3]),
@@ -157,11 +190,11 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     )
     println("Wigner range: $(round(w_min, digits=4)) to $(round(w_max, digits=4))")
 
-    # ── cztery pierwsze snapshoty ─────────────────────────────────────────────
+    # =========== cztery pierwsze snapshoty ==========================
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
-    snap4        = wigner_files[1:45:min(1000, length(wigner_files))]
+    snap4        = wigner_files[1:40:min(1000, length(wigner_files))]
     # snap4        = wigner_files[1:200:min(800, length(wigner_files))]
 
     fig = Figure(size=(1000, 1200))
@@ -191,7 +224,8 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
                   xticks = [-2., 0., 2.],
                   xticklabelsize = 25,
                   yticklabelsize = 25,
-                  limits       = ((-3.9, 2.4), (-15., 15.)))
+                  limits       = limits
+                  )
 
         hm = heatmap!(ax, x_unique, p_unique, W;
         colormap   = :RdBu,
@@ -211,7 +245,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
 
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
-    out_file = joinpath(out_dir, "wigner_snapshots_2x2_sqrt.pdf")
+    out_file = joinpath(out_dir, "wigner_snapshots_model.pdf")
     # out_file = joinpath(out_dir, "wigner_snapshots_2x2_long_sim.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
@@ -264,29 +298,29 @@ a0 = 0.0312
   
 
 function plot_Godbeer_AT_potential()
-    x_unique = range(-2.95, 2.8, 300)
+    x_unique = range(-3.25, 2.9, 300)
     p_unique = range(-15.5, 15.5, 200)
-    v_unique = x_unique./alpha
+    # v_unique = x_unique./alpha
     
     t = 0.0  
-    Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
+    # Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
     m = 1836
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+    H = [(p^2)/(2m) + model_at(x) for p in p_unique, x in x_unique]
     
     Emin = 0
     Emax = 0 + 0.1  
-    levels = range(Emin, Emax, length=25)
+    levels = range(Emin, Emax, length=15)
     
     fig = Figure(size=(1000, 400))
     
     ax1 = Axis(fig[1,1], 
                xlabel = L"$x$ \text{ (a.u.)}", 
                ylabel = L"U^{\mathrm{A-T}}(x) \; \text{(a.u.)}",
-               title = L"\text{Potencjał 4 stopnia}",
+               title = L"\text{Model harmoniczny A-T}",
                xlabelsize = 27, 
                ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
-    lines!(ax1, x_unique, Vx, linewidth=3, color=:blue)
-    text!(ax1, -2.8, 0.034; text = L"\text{(a)}", fontsize = 30)
+    lines!(ax1, x_unique, model_at, linewidth=3, color=:blue)
+    text!(ax1, -2.9, 0.03; text = L"\text{(a)}", fontsize = 30)
 
     ax2 = Axis(fig[1,2], 
                xlabel = L"$x$ \text{ (a.u.)}", 
@@ -298,11 +332,11 @@ function plot_Godbeer_AT_potential()
     text!(ax2, -2.8, 10.2; text = L"\text{(b)}", fontsize = 30)
     
     display(fig)
-    save("moyal_solver/graphics/hamiltonian_godbeer.pdf", fig)
+    save("moyal_solver/graphics/hamiltonian_model_at.pdf", fig)
     return fig
 end
 
-# plot_Godbeer_AT_potential()
+plot_Godbeer_AT_potential()
 ##
 
 function plot_Slocombe_GC_potential()
@@ -313,26 +347,26 @@ function plot_Slocombe_GC_potential()
     r1 = -2.7
     r2 = 2.1
     m = 1836
-    x_unique = range(-3.8, 2.4, 300)
+    x_unique = range(-4.4, 2.6, 300)
     p_unique = range(-15.5, 15.5, 200)
     
     t = 0.0  
     Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
+    H = [(p^2)/(2m) + model_gc(x) for p in p_unique, x in x_unique]
     
     Emin = 0
     Emax = 0 + 0.1  
-    levels = range(Emin, Emax, length=25)
+    levels = range(Emin, Emax, length=15)
     
     fig = Figure(size=(1000, 400))
     
     ax1 = Axis(fig[1,1], 
                xlabel = L"$x$ \text{ (a.u.)}", 
                ylabel = L"U^{\mathrm{G-C}}(x) \; \text{(a.u.)}",
-               title = L"\text{Podwójny potencjał Morse'a}",
+               title = L"\text{Model harmoniczny G-C}",
                xlabelsize = 27,
                ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
-    lines!(ax1, x_unique, Vx, linewidth=3, color=:blue)
+    lines!(ax1, x_unique, model_gc, linewidth=3, color=:blue)
     text!(ax1, -3.7, 0.024; text = L"\text{(a)}", fontsize = 30)
 
     ax2 = Axis(fig[1,2], 
@@ -346,10 +380,10 @@ function plot_Slocombe_GC_potential()
     text!(ax2, -3.7, 10.2; text = L"\text{(b)}", fontsize = 30)
    
     # display(fig)
-    save("moyal_solver/graphics/hamiltonian_slocombe.pdf", fig)
+    save("moyal_solver/graphics/hamiltonian_model_gc.pdf", fig)
     return fig
 end
-# plot_Slocombe_GC_potential()
+plot_Slocombe_GC_potential()
 ## exp values
 
 function get_exp_vals()
@@ -381,53 +415,102 @@ end
 get_exp_vals()
 
 ## create trajectory of xp values
-function get_traj_of_exp_vals()
-    V1 = 0.1617
-    V2 = 0.082
-    a1 = 0.305
-    a2 = 0.755
-    r1 = -2.7
-    r2 = 2.1
-    m = 1836
-    x_unique = range(-3.8, 2.4, 300)
-    p_unique = range(-15.5, 15.5, 200)
-    
-    t = 0.0  
-    Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-    
-    Emin = 0
-    Emax = 0 + 0.1  
-    levels = range(Emin, Emax, length=25)
-    
-    data = readdlm("moyal_solver/build/output/stats.dat", skipstart = 1)
+function get_traj_of_exp_vals(is_at::Bool = true)
+    if is_at
+        V1 = 0.1617
+        V2 = 0.082
+        a1 = 0.305
+        a2 = 0.755
+        r1 = -2.7
+        r2 = 2.1
+        m = 1836
+        x_unique = range(-3.8, 2.8, 300)
+        p_unique = range(-12.5, 12.5, 200)
+        
+        t = 0.0  
+        Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
+        Emin = 0
+        Emax = 0 + 0.1  
+        levels = range(Emin, Emax, length=25)
+        
+    else
+        x_unique = range(-4.15, 2.8, 300)
+        p_unique = range(-12.5, 12.5, 200)
+        # v_unique = x_unique./alpha
+        
+        t = 0.0  
+        # Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
+        m = 1836
+        
+        Emin = 0
+        Emax = 0 + 0.1  
+        levels = range(Emin, Emax, length=25)
+    end
+    H = is_at ? [(p^2)/(2m) + model_at(x) for p in p_unique, x in x_unique] : [(p^2)/(2m) + model_gc(x) for p in p_unique, x in x_unique]
+    data = is_at ? readdlm("moyal_solver/build_at_model/output/stats.dat", skipstart = 1) : readdlm("moyal_solver/build_gc_model/output/stats.dat", skipstart = 1)
     t = data[:, 2]
     x = data[:, 3]
     p = data[:, 4]
     
     fig = Figure(size=(800, 500))
-    
+    title = is_at ? L"\text{A-T}" : L"\text{G-C}"
     ax2 = Axis(fig[1,1], 
                xlabel = L"x \; \text{(a.u.)}", 
                ylabel = L"p \; (\text{a.u.})",
-               title = L"\text{G-C}",
+               title = title,
                xlabelsize = 25,
                ylabelsize = 25, titlesize = 25,
                xticklabelsize = 20, yticklabelsize = 20,
-               limits = ((-3.8, 2.3), (-14., 14.)))
+               limits = is_at ? ((-2.95, 2.8), (-12.5, 12.5)) :  ((-4.1, 2.4), (-12.5, 12.5))
+               )
     contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5)
-    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych")
+    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = :lightcoral, linewidth = 3.5)
     
-    scatter!(ax2, [-1.1], [5.4], color=:green, markersize=15, label="centrum początkowego gaussianu")
-    Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 20, orientation = :horizontal)
+    scatter!(ax2, [-1.1], [5.4], color=:maroon, markersize=15, label="centrum początkowego gaussianu")
+    Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 24, orientation = :horizontal, nbanks = 2)
     
 
     # display(fig)
-    save("moyal_solver/graphics/GC/trajectory.pdf", fig)
+    if is_at
+        save("moyal_solver/graphics/AT/trajectory.pdf", fig)
+    else
+        save("moyal_solver/graphics/GC/trajectory.pdf", fig)
+    end
     return fig
 end
-get_traj_of_exp_vals()
-
+get_traj_of_exp_vals(true)
+##
+function get_traj_harmonic_oscillator()
+    x_unique = range(-5.2, 5.2, 200)
+    p_unique = range(-5.2, 5.2, 200)
+    m = 1
+    H = [(p.^2)/(2m) + 0.5 * x.^2 for p in p_unique, x in x_unique] 
+    data = readdlm("moyal_solver/build2_HO/output/stats.dat", skipstart = 1)
+    t = data[:, 2]
+    x = data[:, 3]
+    p = data[:, 4]
+    Emin = 0
+    Emax = 0 + 7.
+    levels = range(Emin, Emax, length=15)
+    fig = Figure(size=(800, 500))
+    ax2 = Axis(fig[1,1], 
+               xlabel = L"x \; \text{(a.u.)}", 
+               ylabel = L"p \; (\text{a.u.})",
+            #    title = title,
+               xlabelsize = 25,
+               ylabelsize = 25, titlesize = 25,
+               xticklabelsize = 20, yticklabelsize = 20,
+               limits = ((-2.7, 2.7), (-2.7, 2.7))
+               )
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5)
+    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = :lightcoral, linewidth = 3.5)
+    
+    scatter!(ax2, [-1.0], [1.], color=:maroon, markersize=15, label="centrum początkowego gaussianu")
+    Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 24, orientation = :horizontal, nbanks = 2)
+    save("moyal_solver/graphics/HO_trajectory.pdf", fig)
+    return fig
+end
+get_traj_harmonic_oscillator()
 ## 3 D WDF 
 
 function plot_wigner_3d(x_coords, p_coords, W;
