@@ -253,41 +253,71 @@ end
 
 plot_wigner_snapshots(; is_harmonic=false, is_gc=true, is_at=false)##
 ##
-function create_nonclassicality_plot()
-    stats_file = "moyal_solver/build/output/stats.dat"
+function create_nonclassicality_plot(;is_at::Bool = true, isnot_sole_nonclassicality::Bool = false)
+    stats_file = is_at ? "moyal_solver/build_at_model/output/stats.dat" : "moyal_solver/build_gc_model/output/stats.dat"
     if !isfile(stats_file)
         println("Stats file not found, skipping nonclassicality plot")
         return nothing
     end
+    nonclass_filename = is_at ? "moyal_solver/graphics/AT/nonclassicality.pdf" : "moyal_solver/graphics/GC/nonclassicality.pdf"
     
     data = readdlm(stats_file, skipstart = 1)
     t = data[:, 2]
+    x = data[:, 3]
+    p = data[:, 4]
     delta = size(data, 2) >= 8 ? data[:, 8] : zeros(length(t))  
     
     fig = Figure(size = (1000, 500))
+    ## ====== axis delta ========
     ax = Axis(fig[1, 1],
               xlabel = L"t \;\; (10^3\text{ a.u.)} ",
               ylabel = L"\delta_{\mathrm{W}}(t)",
             #   title = L"\text{Ewolucja nieklasyczności stanu kwantowego}",
               titlesize = 30,
-                      xlabelsize = 30,
-                      ylabelsize = 30, xticklabelsize = 25, yticklabelsize = 25)
-    
+                      xlabelsize = 35,leftspinecolor = :purple, yticklabelcolor = :purple, ylabelcolor = :purple, ytickcolor = :purple,
+                      ylabelsize = 35, xticklabelsize = 30, yticklabelsize = 30)
+    if isnot_sole_nonclassicality
+        ## ====== axis x ========
+        ax1_color = :royalblue1
+        ax1 = Axis(fig[1,1], xlabel = L"t\; \;(10^3\text{ a.u.})", ylabel = L"\langle x\rangle\; (\text{a.u.})", 
+        xlabelsize = 35, ylabelsize = 35, xticklabelsize = 30, yticklabelsize = 30, yaxisposition = :right, 
+        yticklabelcolor = ax1_color, ylabelcolor = ax1_color, ytickcolor = ax1_color, ylabelpadding  = 70)
+        
+        hidexdecorations!(ax1)
+
+        ## ====== axis p ========
+        ax2_color = :crimson
+        ax2 = Axis(fig[1,1], ylabel = L"\langle p \rangle\; \text{(a.u.)}", ylabelsize = 35, titlesize = 30,
+        yticklabelsize = 30, yaxisposition = :right, rightspinecolor = ax2_color, 
+        yticklabelcolor = ax2_color, ylabelcolor = ax2_color, ytickcolor = ax2_color)
+        hidexdecorations!(ax2)
+        if is_at
+            ylims!(ax1, -2.8, 0.0)
+            ylims!(ax2, -7.5, 9.0) # for at
+        else
+            ylims!(ax1, -4.2, 0.0)
+            ylims!(ax2, -9.5, 13.0) # for gc    
+        end
+            ## exp vals
+        lines!(ax1, t/1e03, x, color = :royalblue1, linewidth = 4)
+        lines!(ax2, t/1e03, p, color = :crimson, linewidth = 4)
+        nonclass_filename = is_at ? "moyal_solver/graphics/AT/nonclassicality_exp.pdf" : "moyal_solver/graphics/GC/nonclassicality_exp.pdf"
+    end
+    ## ==== delta 
     lines!(ax, t/1e03, delta, linewidth = 6, color = :purple)
     hlines!(ax, [0], color = :black, linestyle = :dash, alpha = 0.5)
     
-    # Create directory if it doesn't exist
-    nonclass_filename = "moyal_solver/graphics/GC/nonclassicality.pdf"
+    # display(fig)
+    
     nonclass_dir = dirname(nonclass_filename)
     if !isdir(nonclass_dir)
         mkpath(nonclass_dir)
         println("Created directory: $nonclass_dir")
     end
-    
     save(nonclass_filename, fig)
     return fig
 end
-create_nonclassicality_plot()
+create_nonclassicality_plot(;is_at = true, isnot_sole_nonclassicality = true)
 ##
 alpha = 1.963
 a4 = 0.0207
@@ -379,8 +409,8 @@ function plot_Slocombe_GC_potential()
  
     text!(ax2, -3.7, 10.2; text = L"\text{(b)}", fontsize = 30)
    
-    # display(fig)
-    save("moyal_solver/graphics/hamiltonian_model_gc.pdf", fig)
+    display(fig)
+    # save("moyal_solver/graphics/hamiltonian_model_gc.pdf", fig)
     return fig
 end
 plot_Slocombe_GC_potential()
@@ -431,7 +461,7 @@ function get_traj_of_exp_vals(is_at::Bool = true)
         Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
         Emin = 0
         Emax = 0 + 0.1  
-        levels = range(Emin, Emax, length=25)
+        levels = range(Emin, Emax, length=20)
         
     else
         x_unique = range(-4.15, 2.8, 300)
@@ -444,14 +474,14 @@ function get_traj_of_exp_vals(is_at::Bool = true)
         
         Emin = 0
         Emax = 0 + 0.1  
-        levels = range(Emin, Emax, length=25)
+        levels = range(Emin, Emax, length=20)
     end
     H = is_at ? [(p^2)/(2m) + model_at(x) for p in p_unique, x in x_unique] : [(p^2)/(2m) + model_gc(x) for p in p_unique, x in x_unique]
     data = is_at ? readdlm("moyal_solver/build_at_model/output/stats.dat", skipstart = 1) : readdlm("moyal_solver/build_gc_model/output/stats.dat", skipstart = 1)
     t = data[:, 2]
     x = data[:, 3]
     p = data[:, 4]
-    
+    color = cgrad(:batlow)
     fig = Figure(size=(800, 500))
     title = is_at ? L"\text{A-T}" : L"\text{G-C}"
     ax2 = Axis(fig[1,1], 
@@ -463,14 +493,14 @@ function get_traj_of_exp_vals(is_at::Bool = true)
                xticklabelsize = 20, yticklabelsize = 20,
                limits = is_at ? ((-2.95, 2.8), (-12.5, 12.5)) :  ((-4.1, 2.4), (-12.5, 12.5))
                )
-    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5)
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5, colormap = color)
     lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = :lightcoral, linewidth = 3.5)
     
     scatter!(ax2, [-1.1], [5.4], color=:maroon, markersize=15, label="centrum początkowego gaussianu")
     Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 24, orientation = :horizontal, nbanks = 2)
     
 
-    # display(fig)
+    display(fig)
     if is_at
         save("moyal_solver/graphics/AT/trajectory.pdf", fig)
     else
@@ -478,7 +508,7 @@ function get_traj_of_exp_vals(is_at::Bool = true)
     end
     return fig
 end
-get_traj_of_exp_vals(true)
+get_traj_of_exp_vals(false)
 ##
 function get_traj_harmonic_oscillator()
     x_unique = range(-5.2, 5.2, 200)
@@ -492,6 +522,7 @@ function get_traj_harmonic_oscillator()
     Emin = 0
     Emax = 0 + 7.
     levels = range(Emin, Emax, length=15)
+    color = cgrad(:Paired_12)
     fig = Figure(size=(800, 500))
     ax2 = Axis(fig[1,1], 
                xlabel = L"x \; \text{(a.u.)}", 
@@ -502,7 +533,7 @@ function get_traj_harmonic_oscillator()
                xticklabelsize = 20, yticklabelsize = 20,
                limits = ((-2.7, 2.7), (-2.7, 2.7))
                )
-    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5)
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5, colormap = color)
     lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = :lightcoral, linewidth = 3.5)
     
     scatter!(ax2, [-1.0], [1.], color=:maroon, markersize=15, label="centrum początkowego gaussianu")

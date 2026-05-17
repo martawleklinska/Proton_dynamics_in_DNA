@@ -10,11 +10,3 @@ cd moyal_solver/
 cd build/
 ./main
 ```
-
-## TODO
-Check what kind of a initial condition to use and how to caption the tautomerisation.
-
-Run a full time simulation (server). 
-
-Calculate basic thermodynamical characteristics.
-
