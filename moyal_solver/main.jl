@@ -131,7 +131,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     if is_at
         output_dir = "moyal_solver/build_at_model/output/"
     elseif is_gc
-        output_dir = "moyal_solver/build_gc_model/output/"
+        output_dir = "moyal_solver/build/output/"
     end
     isdir(output_dir) || error("Output directory not found: $output_dir")
 
@@ -164,14 +164,6 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
         potential(x) = model_gc(x)
     elseif is_at
         m  = 1836.0
-        # alpha = 1.963
-        # a4 = 0.0207
-        # a3 = -0.0053
-        # a2 = -0.0414
-        # a1 = 0.0158
-        # a0 = 0.0312
-        # v  = x_unique ./ alpha
-        # Vx = @. a4*v^4 + a3*v^3 + a2*v^2 + a1*v + a0
         levels = range(0, 0.1, length=15)
         label  = "AT"
         limits = ((-3.3, 2.85), (-12.5, 12.5))
@@ -245,8 +237,8 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
 
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
-    out_file = joinpath(out_dir, "wigner_snapshots_model.pdf")
-    # out_file = joinpath(out_dir, "wigner_snapshots_2x2_long_sim.pdf")
+    # out_file = joinpath(out_dir, "wigner_snapshots_model.pdf")
+    out_file = joinpath(out_dir, "wigner_snapshots_model_GC_tau_init.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
 end
@@ -637,3 +629,191 @@ end
 # fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_godbeer_higher_p0/output/wigner_00000092600.dat")
 fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build/output/wigner_00000092500.dat")
 save("moyal_solver/graphics/GC/WDF_3d.png", fig)
+
+## function that determines what percent of the WDF is in the canonical form / barrier / tautomerical form
+function get_percent_of_WDF(; is_at::Bool = true)
+
+    output_dir = is_at ?
+        "moyal_solver/build_at_model/output/" :
+        "moyal_solver/build/output/"
+
+    isdir(output_dir) || error("Output directory not found: $output_dir")
+
+    wigner_files = filter(
+        f -> startswith(f, "wigner_") && endswith(f, ".dat"),
+        readdir(output_dir)
+    )
+
+    sort!(wigner_files)
+
+    # take every 50th snapshot
+    snap4 = wigner_files[1:1:end]
+
+    # ============================================================
+    # Read grid once
+    # ============================================================
+
+    data = readdlm(joinpath(output_dir, wigner_files[1]))
+
+    x_unique = sort(unique(data[:, 1]))
+    p_unique = sort(unique(data[:, 2]))
+
+    nx = length(x_unique)
+    np = length(p_unique)
+
+    dx = x_unique[2] - x_unique[1]
+    dp = p_unique[2] - p_unique[1]
+
+    dA = dx * dp
+
+    # ============================================================
+    # Region masks
+    # ============================================================
+
+    can_mask = x_unique .>= 1.21
+    bar_mask = (-0.51 .<= x_unique) .& (x_unique .< 1.21)
+    tau_mask = x_unique .< -0.51
+
+    # ============================================================
+    # Arrays
+    # ============================================================
+
+    # signed quasi-probability
+    P_can = Float64[]
+    P_bar = Float64[]
+    P_tau = Float64[]
+
+    # absolute localization
+    L_can = Float64[]
+    L_bar = Float64[]
+    L_tau = Float64[]
+
+    # negativity
+    Neg_total = Float64[]
+
+    # ============================================================
+    # Main loop
+    # ============================================================
+
+    for filename in snap4
+
+        raw = readdlm(joinpath(output_dir, filename))
+
+        W = reshape(raw[:, 3], np, nx)'
+
+        # --------------------------------------------------------
+        # Signed populations
+        # --------------------------------------------------------
+
+        Pcan = sum(W[can_mask, :]) * dA
+        Pbar = sum(W[bar_mask, :]) * dA
+        Ptau = sum(W[tau_mask, :]) * dA
+
+        push!(P_can, Pcan)
+        push!(P_bar, Pbar)
+        push!(P_tau, Ptau)
+
+        # --------------------------------------------------------
+        # Absolute localization
+        # --------------------------------------------------------
+
+        abs_total = sum(abs.(W)) * dA
+
+        Lcan = sum(abs.(W[can_mask, :])) * dA / abs_total
+        Lbar = sum(abs.(W[bar_mask, :])) * dA / abs_total
+        Ltau = sum(abs.(W[tau_mask, :])) * dA / abs_total
+
+        push!(L_can, Lcan)
+        push!(L_bar, Lbar)
+        push!(L_tau, Ltau)
+
+        # --------------------------------------------------------
+        # Negativity volume
+        # --------------------------------------------------------
+
+        neg = sum(abs.(W) .- W) * dA / 2
+
+        push!(Neg_total, neg)
+    end
+
+    # ============================================================
+    # Time axis
+    # ============================================================
+
+    t = collect(1:length(snap4))./20
+
+    # ============================================================
+    # Figure 1 — signed quasi-probabilities
+    # ============================================================
+
+    fig1 = Figure(size = (1000, 500))
+
+    ax1 = Axis(
+        fig1[1,1],
+        xlabel = L"t \; (10^3\ \mathrm{a.u.})",
+        ylabel = L"\int_{\Omega}\text{d}x\;\text{d}p\; \varrho(x,p; t)",
+        xlabelsize = 28,
+        ylabelsize = 28,
+        xticklabelsize = 22,
+        yticklabelsize = 22
+    )
+
+    lines!(ax1, t, P_can, label = "canonical")
+    lines!(ax1, t, P_bar, label = "barrier")
+    lines!(ax1, t, P_tau, label = "tautomeric")
+
+    axislegend(ax1)
+
+    # ============================================================
+    # Figure 2 — localization measure
+    # ============================================================
+
+    fig2 = Figure(size = (1000, 500))
+
+    ax2 = Axis(
+        fig2[1,1],
+        xlabel = L"t \; (10^3\ \mathrm{a.u.})",
+        ylabel = L"\frac{\int_{\Omega}\text{d}x\;\text{d}p\;|\varrho(x, p; t)|}{\int \text{d}x\;\text{d}p\;|\varrho(x, p; t)|}",
+        xlabelsize = 28,
+        ylabelsize = 28,
+        xticklabelsize = 22,
+        yticklabelsize = 22
+    )
+
+    lines!(ax2, t, L_can, label = "canonical")
+    lines!(ax2, t, L_bar, label = "barrier")
+    lines!(ax2, t, L_tau, label = "tautomeric")
+
+    Legend(fig2[2,1], ax2, labelsize = 28, orientation = :horizontal)
+
+    # ============================================================
+    # Figure 3 — negativity
+    # ============================================================
+
+    fig3 = Figure(size = (1000, 500))
+
+    ax3 = Axis(
+        fig3[1,1],
+        xlabel = L"t \; (10^3\ \mathrm{a.u.})",
+        ylabel = L"\mathcal N",
+        xlabelsize = 28,
+        ylabelsize = 28,
+        xticklabelsize = 22,
+        yticklabelsize = 22
+    )
+
+    lines!(ax3, t, Neg_total, label = "negativity")
+
+    axislegend(ax3)
+
+    # display(fig1)
+    display(fig2)
+    # display(fig3)
+
+    return (
+        P_can, P_bar, P_tau,
+        L_can, L_bar, L_tau,
+        Neg_total
+    )
+end
+get_percent_of_WDF()
