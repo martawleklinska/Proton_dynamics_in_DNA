@@ -635,7 +635,7 @@ function get_percent_of_WDF(; is_at::Bool = true)
 
     output_dir = is_at ?
         "moyal_solver/build_at_model/output/" :
-        "moyal_solver/build/output/"
+        "moyal_solver/build_gc_model_tautomeric/output/"
 
     isdir(output_dir) || error("Output directory not found: $output_dir")
 
@@ -762,7 +762,7 @@ function get_percent_of_WDF(; is_at::Bool = true)
     lines!(ax1, t, P_bar, label = "barrier")
     lines!(ax1, t, P_tau, label = "tautomeric")
 
-    axislegend(ax1)
+    Legend(fig1[2,1], ax1, labelsize = 32, orientation = :horizontal, framevisible = false)
 
     # ============================================================
     # Figure 2 — localization measure
@@ -773,18 +773,18 @@ function get_percent_of_WDF(; is_at::Bool = true)
     ax2 = Axis(
         fig2[1,1],
         xlabel = L"t \; (10^3\ \mathrm{a.u.})",
-        ylabel = L"\frac{\int_{\Omega}\text{d}x\;\text{d}p\;|\varrho(x, p; t)|}{\int \text{d}x\;\text{d}p\;|\varrho(x, p; t)|}",
+        ylabel = L"\frac{\int_{\Omega}\text{d}x\;\text{d}p\;|\varrho(x, p; t)|}{\int_{\mathbb{R}^2} \text{d}x\;\text{d}p\;|\varrho(x, p; t)|}",
         xlabelsize = 28,
         ylabelsize = 28,
         xticklabelsize = 22,
         yticklabelsize = 22
     )
 
-    lines!(ax2, t, L_can, label = "canonical")
-    lines!(ax2, t, L_bar, label = "barrier")
-    lines!(ax2, t, L_tau, label = "tautomeric")
+    lines!(ax2, t, L_can, label = L"\text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
+    lines!(ax2, t, L_bar, label = L"\text{bariera}", linewidth = 5.0, color = :deepskyblue3)
+    lines!(ax2, t, L_tau, label = L"\text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
 
-    Legend(fig2[2,1], ax2, labelsize = 28, orientation = :horizontal)
+    Legend(fig2[2,1], ax2, labelsize = 32, orientation = :horizontal, framevisible = false)
 
     # ============================================================
     # Figure 3 — negativity
@@ -802,18 +802,23 @@ function get_percent_of_WDF(; is_at::Bool = true)
         yticklabelsize = 22
     )
 
-    lines!(ax3, t, Neg_total, label = "negativity")
+    lines!(ax3, t, Neg_total, label = "nieklasyczność")
 
-    axislegend(ax3)
+    Legend(fig3[2,1], ax3, labelsize = 28, orientation = :horizontal)
 
-    # display(fig1)
-    display(fig2)
-    # display(fig3)
-
+    if is_at
+        save("moyal_solver/graphics/AT/fraction_wdf_not_normalized.pdf", fig1)
+        save("moyal_solver/graphics/AT/fraction_wdf.pdf", fig2)
+        save("moyal_solver/graphics/AT/negativity_wdf.pdf", fig3)
+    else
+        save("moyal_solver/graphics/GC/fraction_wdf_not_normalized_tau.pdf", fig1)
+        save("moyal_solver/graphics/GC/fraction_wdf_tau.pdf", fig2)
+        save("moyal_solver/graphics/GC/negativity_wdf_tau.pdf", fig3)
+    end
     return (
         P_can, P_bar, P_tau,
         L_can, L_bar, L_tau,
         Neg_total
     )
 end
-get_percent_of_WDF()
+get_percent_of_WDF(is_at = false)

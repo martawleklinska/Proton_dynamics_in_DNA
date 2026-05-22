@@ -34,10 +34,10 @@ struct MoyalConfig {
     double mass = 1836.0;
     
     double dt = 0.1;      
-    int timeSteps = 100000;
+    int timeSteps = 10000;
     
-    double x_init  = 1.0;
-    double p_init  = 5.0;
+    double x_init  = -1.0;
+    double p_init  = 1.0;
     double sigma_x = 0.5;
     double sigma_p = 1.0;
     
