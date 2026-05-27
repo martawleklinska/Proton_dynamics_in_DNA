@@ -129,9 +129,9 @@ end
 ##
 function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_at::Bool=true)
     if is_at
-        output_dir = "moyal_solver/build_at_model/output/"
+        output_dir = "moyal_solver/build_at_short_sim/output/"
     elseif is_gc
-        output_dir = "moyal_solver/build/output/"
+        output_dir = "moyal_solver/build_gc_model_tautomeric/output/"
     end
     isdir(output_dir) || error("Output directory not found: $output_dir")
 
@@ -171,7 +171,7 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     else
         error("Wybierz jeden potencjał: is_harmonic, is_gc lub is_at")
     end
-    H = [(p^2)/(2m) + potential(x) for p in p_unique, x in x_unique]
+    H = [(p^2)/(2m) + model_at(x) for p in p_unique, x in x_unique]
 
     # =========== zakres kolorów z próbki plików ==========================
     sample = wigner_files[1:max(1, length(wigner_files)÷10):end]
@@ -186,10 +186,11 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     wigner_files = filter(f -> startswith(f, "wigner_") && endswith(f, ".dat"), 
                          readdir(output_dir))
     sort!(wigner_files)
-    snap4        = wigner_files[1:40:min(1000, length(wigner_files))]
-    # snap4        = wigner_files[1:200:min(800, length(wigner_files))]
+    # snap4        = wigner_files[1:40:min(1000, length(wigner_files))]
+    snap4        = wigner_files[1:6:min(800, length(wigner_files))]
 
-    fig = Figure(size=(1000, 1200))
+    # fig = Figure(size=(1000, 1200)) # for long sims 
+    fig = Figure(size = (900, 800)) # short sims
     β = 0.01
     wigner_scale = ReversibleScale(
         w ->  asinh(w / β) / log(10),  
@@ -198,8 +199,8 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
 
     for (idx, filename) in enumerate(snap4)
         row, col = divrem(idx - 1, 2) .+ 1          # (1,1) (1,2) (2,1) (2,2)
-        titles = [L"t = 0.0 \text{ a.u.}", L"t = 2\times 10^3 \text{ a.u.}", L"t = 4\times 10^3\text{ a.u.}", L"t = 6\times 10^3\text{ a.u.}", L"t = 8\times 10^3\text{ a.u.}", L"t = 10\times 10^3\text{ a.u.}"]
-        # titles = [L"t = 0.0 \text{ a.u.}", L"t = 200.0 \text{ a.u.}", L"t = 400.0\text{ a.u.}", L"t = 600.0\text{ a.u.}"]
+        # titles = [L"t = 0.0 \text{ a.u.}", L"t = 2\times 10^3 \text{ a.u.}", L"t = 4\times 10^3\text{ a.u.}", L"t = 6\times 10^3\text{ a.u.}", L"t = 8\times 10^3\text{ a.u.}", L"t = 10\times 10^3\text{ a.u.}"]
+        titles = [L"t = 0.0 \text{ a.u.}", L"t = 200.0 \text{ a.u.}", L"t = 400.0\text{ a.u.}", L"t = 600.0\text{ a.u.}"]
         
         step     = parse(Int, match(r"wigner_(\d+)\.dat", filename).captures[1])
         t_val    = step * dt
@@ -238,12 +239,12 @@ function plot_wigner_snapshots(; is_harmonic::Bool=false, is_gc::Bool=false, is_
     out_dir  = "moyal_solver/graphics/$label"
     mkpath(out_dir)
     # out_file = joinpath(out_dir, "wigner_snapshots_model.pdf")
-    out_file = joinpath(out_dir, "wigner_snapshots_model_GC_tau_init.pdf")
+    out_file = joinpath(out_dir, "wigner_snapshots_model_short_sim.pdf")
     save(out_file, fig; px_per_unit=2)
     println("Zapisano: $out_file")
 end
 
-plot_wigner_snapshots(; is_harmonic=false, is_gc=true, is_at=false)##
+plot_wigner_snapshots(; is_harmonic=false, is_gc=false, is_at=true)##
 ##
 function create_nonclassicality_plot(;is_at::Bool = true, isnot_sole_nonclassicality::Bool = false)
     stats_file = is_at ? "moyal_solver/build_at_model/output/stats.dat" : "moyal_solver/build_gc_model/output/stats.dat"
@@ -631,12 +632,16 @@ fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build/output/wigner_0000009250
 save("moyal_solver/graphics/GC/WDF_3d.png", fig)
 
 ## function that determines what percent of the WDF is in the canonical form / barrier / tautomerical form
-function get_percent_of_WDF(; is_at::Bool = true)
-
+function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
+    if is_tau_init
+        output_dir = is_at ?
+            "moyal_solver/build_at_model_tautomeric/output/" :
+            "moyal_solver/build_gc_model_tautomeric/output/"
+    else
     output_dir = is_at ?
         "moyal_solver/build_at_model/output/" :
-        "moyal_solver/build_gc_model_tautomeric/output/"
-
+        "moyal_solver/build_gc_model/output/"
+    end
     isdir(output_dir) || error("Output directory not found: $output_dir")
 
     wigner_files = filter(
@@ -758,9 +763,9 @@ function get_percent_of_WDF(; is_at::Bool = true)
         yticklabelsize = 22
     )
 
-    lines!(ax1, t, P_can, label = "canonical")
-    lines!(ax1, t, P_bar, label = "barrier")
-    lines!(ax1, t, P_tau, label = "tautomeric")
+    lines!(ax1, t, P_can, label = L"\text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
+    lines!(ax1, t, P_bar, label = L"\text{bariera}", linewidth = 5.0, color = :deepskyblue3)
+    lines!(ax1, t, P_tau, label = L"\text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
 
     Legend(fig1[2,1], ax1, labelsize = 32, orientation = :horizontal, framevisible = false)
 
@@ -773,16 +778,16 @@ function get_percent_of_WDF(; is_at::Bool = true)
     ax2 = Axis(
         fig2[1,1],
         xlabel = L"t \; (10^3\ \mathrm{a.u.})",
-        ylabel = L"\frac{\int_{\Omega}\text{d}x\;\text{d}p\;|\varrho(x, p; t)|}{\int_{\mathbb{R}^2} \text{d}x\;\text{d}p\;|\varrho(x, p; t)|}",
+        ylabel = L"\mathcal{P}_{\Omega}(t)",
         xlabelsize = 28,
         ylabelsize = 28,
         xticklabelsize = 22,
         yticklabelsize = 22
     )
 
-    lines!(ax2, t, L_can, label = L"\text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
-    lines!(ax2, t, L_bar, label = L"\text{bariera}", linewidth = 5.0, color = :deepskyblue3)
-    lines!(ax2, t, L_tau, label = L"\text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
+    lines!(ax2, t, L_can, label = L"\Omega \to \text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
+    lines!(ax2, t, L_bar, label = L"\Omega \to \text{bariera}", linewidth = 5.0, color = :deepskyblue3)
+    lines!(ax2, t, L_tau, label = L"\Omega \to \text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
 
     Legend(fig2[2,1], ax2, labelsize = 32, orientation = :horizontal, framevisible = false)
 
@@ -807,13 +812,25 @@ function get_percent_of_WDF(; is_at::Bool = true)
     Legend(fig3[2,1], ax3, labelsize = 28, orientation = :horizontal)
 
     if is_at
-        save("moyal_solver/graphics/AT/fraction_wdf_not_normalized.pdf", fig1)
-        save("moyal_solver/graphics/AT/fraction_wdf.pdf", fig2)
-        save("moyal_solver/graphics/AT/negativity_wdf.pdf", fig3)
+        if is_tau_init
+            save("moyal_solver/graphics/AT/fraction_wdf_not_normalized_tau.pdf", fig1)
+            save("moyal_solver/graphics/AT/fraction_wdf_tau.pdf", fig2)
+            save("moyal_solver/graphics/AT/negativity_wdf_tau.pdf", fig3)
+        else
+            save("moyal_solver/graphics/AT/fraction_wdf_not_normalized.pdf", fig1)
+            save("moyal_solver/graphics/AT/fraction_wdf.pdf", fig2)
+            save("moyal_solver/graphics/AT/negativity_wdf.pdf", fig3)    
+        end
     else
-        save("moyal_solver/graphics/GC/fraction_wdf_not_normalized_tau.pdf", fig1)
-        save("moyal_solver/graphics/GC/fraction_wdf_tau.pdf", fig2)
-        save("moyal_solver/graphics/GC/negativity_wdf_tau.pdf", fig3)
+        if is_tau_init
+            save("moyal_solver/graphics/GC/fraction_wdf_not_normalized_tau.pdf", fig1)
+            save("moyal_solver/graphics/GC/fraction_wdf_tau.pdf", fig2)
+            save("moyal_solver/graphics/GC/negativity_wdf_tau.pdf", fig3)
+        else
+            save("moyal_solver/graphics/GC/fraction_wdf_not_normalized.pdf", fig1)
+            save("moyal_solver/graphics/GC/fraction_wdf.pdf", fig2)
+            save("moyal_solver/graphics/GC/negativity_wdf.pdf", fig3)    
+        end
     end
     return (
         P_can, P_bar, P_tau,
@@ -821,4 +838,132 @@ function get_percent_of_WDF(; is_at::Bool = true)
         Neg_total
     )
 end
-get_percent_of_WDF(is_at = false)
+get_percent_of_WDF(is_at = false, is_tau_init = true)
+
+## FFT delta
+using FFTW
+using CairoMakie
+function find_spectral_peaks(freqs, power;
+        n_peaks        = 3,
+        min_freq       = nothing,
+        min_prominence = 0.05)
+
+    # Próg dolny: jeśli nie podano, pomijamy DC (f = 0)
+    f_min = isnothing(min_freq) ? freqs[2] : min_freq
+    mask  = freqs .>= f_min
+
+    f_masked = freqs[mask]
+    p_masked = power[mask]
+
+    threshold = min_prominence * maximum(p_masked)
+
+    # Wykrywanie lokalnych maksimów (sąsiad z obu stron mniejszy)
+    is_peak = falses(length(p_masked))
+    for i in 2:(length(p_masked) - 1)
+        if p_masked[i] > p_masked[i-1] &&
+           p_masked[i] > p_masked[i+1] &&
+           p_masked[i] >= threshold
+            is_peak[i] = true
+        end
+    end
+
+    peak_freqs  = f_masked[is_peak]
+    peak_powers = p_masked[is_peak]
+
+    # Sortuj malejąco po amplitudzie, zwróć n_peaks pierwszych
+    order       = sortperm(peak_powers; rev = true)
+    n           = min(n_peaks, length(order))
+
+    return peak_freqs[order[1:n]], peak_powers[order[1:n]]
+end
+
+function get_fft_delta(; is_at::Bool = true, isnot_sole_nonclassicality::Bool = false)
+    stats_file = is_at ? "moyal_solver/build_at_model/output/stats.dat" :
+                         "moyal_solver/build_gc_model/output/stats.dat"
+    if !isfile(stats_file)
+        println("Stats file not found, skipping nonclassicality plot")
+        return nothing
+    end
+
+    nonclass_filename = is_at ? "moyal_solver/graphics/AT/nonclassicality_fft.pdf" :
+                                "moyal_solver/graphics/GC/nonclassicality_fftw.pdf"
+
+    data = readdlm(stats_file, skipstart = 1)
+    t     = data[40:end, 2]
+    x     = data[:, 3]
+    p     = data[:, 4]
+    delta = size(data, 2) >= 8 ? data[40:end, 8] : zeros(length(t))
+
+    # ======== FFT =====================================
+
+    N  = length(t)
+    dt = (t[end] - t[1]) / (N - 1)        # zakładamy równomierne próbkowanie
+
+    # Transformata i odpowiadające jej częstotliwości
+    delta_fft  = fft(delta)                # zespolone widmo
+    freqs      = fftfreq(N, 1 / dt)       # wektor częstotliwości [1/jednostka czasu]
+
+    # Jednostronne widmo amplitudowe (f >= 0)
+    half      = freqs .>= 0         
+    freqs_pos = freqs[half]
+    power     = abs.(delta_fft[half])
+    power[2:end] .*= 2               # kompensacja jednostronności
+
+    _, peak_idx = findmax(power[2:end])
+    peak_freq   = freqs_pos[peak_idx + 1]
+    peak_freqs, peak_powers = find_spectral_peaks(freqs_pos, power;
+        n_peaks        = 3,
+        min_prominence = 0.05,
+    )
+
+    fig = Figure(size = (900, 650))
+
+    ax1 = Axis(fig[1, 1];
+        xlabel = L"t \; \text{(a.u.)}",
+        ylabel = L"\delta(t)",
+        title  = is_at ? L"\text{Parametr nieklasyczności model AT}" : "Nieklasyczność – model GC",
+        titlesize  = 20,
+        xlabelsize = 20,
+        ylabelsize = 20,
+    )
+    lines!(ax1, t, delta; color = :steelblue, linewidth = 1.5)
+
+    ax2 = Axis(fig[2, 1];
+        xlabel = L"\omega \; \text{(a.u.)}",
+        ylabel = L"|\mathcal{F}_{t\to\omega}(\delta)|",
+        title  = L"\text{Widmo amplitudowe} \; \delta",
+        titlesize  = 20,
+        xlabelsize = 20,
+        ylabelsize = 20,
+    )
+    xlims!(ax2, 0.0, 0.01)
+    # ylims!(ax2, 0.0, 30)
+    lines!(ax2, freqs_pos, power; color = :crimson, linewidth = 1.5)
+
+    vlines!(ax2, [peak_freq]; color = :orange, linestyle = :dash, linewidth = 1.5,
+            label = "f_peak = $(round(peak_freq, digits=4))")
+    colors = [:orange, :green, :purple]
+    for (i, (f, a)) in enumerate(zip(peak_freqs, peak_powers))
+        vlines!(ax2, [f];
+            color     = colors[i],
+            linestyle = :dash,
+            linewidth = 1.5,
+            label     = "f$(i) = $(round(f, digits=4))",
+        )
+        # Etykieta nad pikiem
+        text!(ax2, f, a;
+            text   = " f$(i)",
+            color  = colors[i],
+            fontsize = 11,
+        )
+    end
+    axislegend(ax2; position = :rt, labelsize = 11)
+
+    ax2.yscale = log10
+
+    save(nonclass_filename, fig)
+    # display(fig)
+    println("Zapisano: $nonclass_filename")
+    return fig
+end
+get_fft_delta()
