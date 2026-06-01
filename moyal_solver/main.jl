@@ -537,6 +537,9 @@ end
 get_traj_harmonic_oscillator()
 ## 3 D WDF 
 
+using GLMakie
+using DelimitedFiles
+
 function plot_wigner_3d(x_coords, p_coords, W;
                         scaling_factor=0.3,
                         colorrange=(-0.32, 0.32))
@@ -554,10 +557,19 @@ function plot_wigner_3d(x_coords, p_coords, W;
 
     fig = Figure(size=(1200, 800))
     
+    # Definiujemy limity jawnie, aby użyć ich do pozycjonowania ścianek
+    x_lims = (-3.95, 2.45)
+    p_lims = (-14.5, 14.5)
+    z_lims = (-0.32, 0.32)
+
+    # x_lims = (-2.95, 2.8)
+    # p_lims = (-14.5, 14.5)
+    # z_lims = (-0.32, 0.32)
+
     ax3d = Axis3(fig[1, 1],
                  xlabel=L"x \; (\text{a.u.})",
                  ylabel=L"p \; (\text{a.u.})",
-                 zlabel=L"\varrho(x,p; t) \; (\text{a.u.})",
+                 zlabel=L"\varrho(x,p) \; (\text{a.u.})",
                  xticklabelsize = 25, yticklabelsize = 25, zticklabelsize = 25,
                  title=L"t = 9.25 \times 10^{4} \; \text{a.u.}",
                  titlesize=30,
@@ -565,10 +577,10 @@ function plot_wigner_3d(x_coords, p_coords, W;
                  xlabelsize=30,
                  ylabelsize=30,
                  zlabelsize=30,
-                #  limits = ((-2.95, 2.8), (-14.5, 14.5), (-0.32, 0.32)),
-                 limits = ((-3.95, 2.45), (-14.5, 14.5), (-0.32, 0.32)),
+                 limits = (x_lims, p_lims, z_lims),
                  )
     
+    # Główny wykres powierzchniowy funkcji Wignera
     surf = surface!(ax3d, x_coords, p_coords, W_scaled,
                    colormap=:RdBu,
                    colorscale = wigner_scale,
@@ -577,7 +589,8 @@ function plot_wigner_3d(x_coords, p_coords, W;
                    transparency=true,
                    alpha=0.8)
     
-    z_offset = -0.32
+    # Mapowanie płaskie (podłoga)
+    z_offset = z_lims[1]
     Z_flat = fill(z_offset, length(x_coords), length(p_coords))
     heatmap_surf = surface!(ax3d, x_coords, p_coords, Z_flat,
                            color=W_scaled,
@@ -587,12 +600,42 @@ function plot_wigner_3d(x_coords, p_coords, W;
                            shading=false,
                            transparency=false)
     
+    # --- OBLICZANIE ROZKŁADÓW BRZEGOWYCH (Całkowanie numeryczne) ---
+    # KROKI siatki (zakładamy równomierną siatkę)
+    dx = x_coords[2] - x_coords[1]
+    dp = p_coords[2] - p_coords[1]
     
+    # P(x) = \int W(x,p) dp (suma wzdłuż kolumn/wierszy pędu)
+    # W ma wymiary (nx, np), więc sumujemy po drugim wymiarze (p)
+    P_x = sum(W, dims=2)[:] .* dp
+    
+    # P(p) = \int W(x,p) dx
+    # Sumujemy po pierwszym wymiarze (x)
+    P_p = sum(W, dims=1)[:] .* dx
+
+    # --- SKALOWANIE ROZKŁADÓW DO WYKRESU ---
+    # Ponieważ W_scaled jest w skali asinh, rozkłady brzegowe (które są duże) 
+    # warto dopasować wizualnie do wysokości osi Z (np. max wysokość = 0.25)
+    max_z_display = 0.25
+    P_x_plot = (P_x ./ maximum(P_x)) .* max_z_display .+ z_lims[1]
+    P_p_plot = (P_p ./ maximum(P_p)) .* max_z_display .+ z_lims[1]
+
+    # --- RYSOWANIE NA ŚCIANKACH ---
+    # 1. Rozkład położenia P(x) na tylnej ściance (p = p_lims[2])
+    p_wall = fill(p_lims[2], length(x_coords))
+    lines!(ax3d, x_coords, p_wall, P_x_plot.+0.32, 
+           color=:black, linewidth=4, label=L"P(x)")
+    
+    # 2. Rozkład pędu P(p) na lewej ściance (x = x_lims[1])
+    x_wall = fill(x_lims[2], length(p_coords))
+    lines!(ax3d, x_wall, p_coords, P_p_plot.+0.32, 
+           color=:darkred, linewidth=4, label=L"P(p)")
+    
+    # ---
     Colorbar(fig[1, 2], surf;
              label=L"\varrho(x,p; t)",
              labelsize=30, ticklabelsize = 25)
 
-    
     return fig, ax3d
 end
 
@@ -608,27 +651,13 @@ function load_and_plot_wigner_3d(filename; kwargs...)
     
     W = reshape(wigner_real, np, nx)'
 
-    V1 = 0.1617
-    V2 = 0.082
-    a1 = 0.305
-    a2 = 0.755
-    r1 = -2.7
-    r2 = 2.1
-    m = 1836
-    
-    Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
-    H = [(p^2)/(2m) + V for p in p_unique, V in Vx]
-    
-    time_match = match(r"wigner_(\d+\.?\d*)\.dat", basename(filename))
-    time_str = time_match !== nothing ? " (t = $(time_match.captures[1]))" : ""
-    title = "Wigner Distribution Function" * time_str
-    
     return plot_wigner_3d(x_unique, p_unique, W;
                           kwargs...)
 end
 
-# fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_godbeer_higher_p0/output/wigner_00000092600.dat")
-fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build/output/wigner_00000092500.dat")
+fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_gc_model/output/wigner_00000096000.dat")
+# fig, ax3d = load_and_plot_wigner_3d("moyal_solver/build_godbeer_higher_p0/output/wigner_00000096200.dat")
+display(fig)
 save("moyal_solver/graphics/GC/WDF_3d.png", fig)
 
 ## function that determines what percent of the WDF is in the canonical form / barrier / tautomerical form
@@ -756,16 +785,16 @@ function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
     ax1 = Axis(
         fig1[1,1],
         xlabel = L"t \; (10^3\ \mathrm{a.u.})",
-        ylabel = L"\int_{\Omega}\text{d}x\;\text{d}p\; \varrho(x,p; t)",
+        ylabel = L"\mathcal{P}_{\Omega}(t)",
         xlabelsize = 28,
         ylabelsize = 28,
         xticklabelsize = 22,
         yticklabelsize = 22
     )
 
-    lines!(ax1, t, P_can, label = L"\text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
-    lines!(ax1, t, P_bar, label = L"\text{bariera}", linewidth = 5.0, color = :deepskyblue3)
-    lines!(ax1, t, P_tau, label = L"\text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
+    lines!(ax1, t, P_can, label = L"\Omega \to \text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
+    lines!(ax1, t, P_bar, label = L"\Omega \to \text{bariera}", linewidth = 5.0, color = :deepskyblue3)
+    lines!(ax1, t, P_tau, label = L"\Omega \to \text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
 
     Legend(fig1[2,1], ax1, labelsize = 32, orientation = :horizontal, framevisible = false)
 
@@ -838,11 +867,10 @@ function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
         Neg_total
     )
 end
-get_percent_of_WDF(is_at = false, is_tau_init = true)
+get_percent_of_WDF(is_at = false, is_tau_init = false)
 
 ## FFT delta
 using FFTW
-using CairoMakie
 function find_spectral_peaks(freqs, power;
         n_peaks        = 3,
         min_freq       = nothing,
