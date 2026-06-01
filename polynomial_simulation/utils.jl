@@ -99,24 +99,24 @@ function energy_differences()
     n_at = min(length(ene_at), length(ene_at_ho))
     n_gc = min(length(ene_gc), length(ene_gc_ho))
 
-    ΔE_at = ene_at[1:n_at] .- ene_at_ho[1:n_at]
-    ΔE_gc = ene_gc[1:n_gc] .- ene_gc_ho[1:n_gc]
+    ΔE_at = (ene_at[1:n_at] .- ene_at_ho[1:n_at]) ./ ene_at[1:n_at]
+    ΔE_gc = (ene_gc[1:n_gc] .- ene_gc_ho[1:n_gc]) ./ ene_gc[1:n_gc]
 
     ns_at = 0:(n_at-1)
     ns_gc = 0:(n_gc-1)
 
     fig = Figure(resolution = (1000, 400))
-    ax1 = Axis(fig[1,1], xlabel = L"$n$", ylabel = L"$\Delta E \; (10^{-3} \; \text{a.u.})$", title = L"\text{A-T}",
+    ax1 = Axis(fig[1,1], xlabel = L"$n$", ylabel = L"$\Delta E $", title = L"\text{A-T}",
                 xlabelsize = 28, ylabelsize = 28, titlesize = 28, xticklabelsize = 24, yticklabelsize = 24)
-    ax2 = Axis(fig[1,2], xlabel = L"$n$", ylabel = L"$\Delta E \; (10^{-3} \; \text{a.u.})$", title = L"\text{G-C}",
+    ax2 = Axis(fig[1,2], xlabel = L"$n$", ylabel = L"$\Delta E $", title = L"\text{G-C}",
                 xlabelsize = 28, ylabelsize = 28, titlesize = 28, xticklabelsize = 24, yticklabelsize = 24)
     # ax1.yticks = [0, 1.0, 2.0, 3.0]
     # ax2.yticks = [0, 1, 2, 3]
     ax1.xticks = [0, 2, 4, 6, 8, 10, 12]
     ax2.xticks = [0, 2, 4, 6, 8, 10, 12]
     
-    scatter!(ax1, ns_at, abs.(ΔE_at).*1e03, marker = :circle, color = :violetred4, label = "ΔE (exact - HO)")
-    scatter!(ax2, ns_gc, abs.(ΔE_gc).*1e03, marker = :circle, color = :palegreen4, label = "ΔE (exact - HO)")
+    scatter!(ax1, ns_at, abs.(ΔE_at), marker = :circle, color = :violetred4)
+    scatter!(ax2, ns_gc, abs.(ΔE_gc), marker = :circle, color = :palegreen4)
 
     save("graphics/energy_diff.pdf", fig)
     # display(fig)
