@@ -339,12 +339,12 @@ function plot_Godbeer_AT_potential()
     ax1 = Axis(fig[1,1], 
                xlabel = L"$x$ \text{ (a.u.)}", 
                ylabel = L"U^{\mathrm{A-T}}(x) \; \text{(a.u.)}",
-               title = L"\text{Model harmoniczny A-T}",
+               title = L"\text{Przybliżenie harmoniczne A-T}",
                xlabelsize = 27, 
-               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
+               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20,
+               limits = ((-3.25, 2.9), (-0.001, 0.035)))
     lines!(ax1, x_unique, model_at, linewidth=3, color=:blue)
-    text!(ax1, -2.9, 0.03; text = L"\text{(a)}", fontsize = 30)
-
+    
     ax2 = Axis(fig[1,2], 
                xlabel = L"$x$ \text{ (a.u.)}", 
                ylabel = L"$p$ \text{ (a.u.)}",
@@ -352,7 +352,18 @@ function plot_Godbeer_AT_potential()
                xlabelsize = 27,limits = ((-2.95, 2.8), (-15.5, 15.5)),
                ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
     contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5)
-    text!(ax2, -2.8, 10.2; text = L"\text{(b)}", fontsize = 30)
+    
+# bands symbolizing Ωs
+    Ω_C = -3.3:0.1:-0.5
+    Ω_B = -0.5:0.1:1.2
+    Ω_T = 1.2:0.1:2.9
+    lines!(ax1, Ω_C, [-0.0005], color = :lightskyblue, linewidth = 8.)
+    lines!(ax1, Ω_T, [-0.0005], color = :springgreen4, linewidth = 8.)
+    lines!(ax1, Ω_B, [-0.0005], color = :gray60, linewidth = 8.)
+    
+    text!(ax1, -1.9, 0.003; text =  L"\Omega_{\mathrm{C}}", fontsize = 25)
+    text!(ax1, 0.2, 0.003; text =  L"\Omega_{\mathrm{B}}", fontsize = 25)
+    text!(ax1, 1.85, 0.003; text =  L"\Omega_{\mathrm{T}}", fontsize = 25)
     
     display(fig)
     save("moyal_solver/graphics/hamiltonian_model_at.pdf", fig)
@@ -360,8 +371,8 @@ function plot_Godbeer_AT_potential()
 end
 
 plot_Godbeer_AT_potential()
-##
 
+##
 function plot_Slocombe_GC_potential()
     V1 = 0.1617
     V2 = 0.082
@@ -386,11 +397,12 @@ function plot_Slocombe_GC_potential()
     ax1 = Axis(fig[1,1], 
                xlabel = L"$x$ \text{ (a.u.)}", 
                ylabel = L"U^{\mathrm{G-C}}(x) \; \text{(a.u.)}",
-               title = L"\text{Model harmoniczny G-C}",
+               title = L"\text{Przybliżenie harmoniczne G-C}",
                xlabelsize = 27,
-               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
+               ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20,
+               limits = ((-4.4, 2.6), (-0.001, 0.026)))
     lines!(ax1, x_unique, model_gc, linewidth=3, color=:blue)
-    text!(ax1, -3.7, 0.024; text = L"\text{(a)}", fontsize = 30)
+    # text!(ax1, -3.7, 0.024; text = L"\text{(a)}", fontsize = 30)
 
     ax2 = Axis(fig[1,2], 
                xlabel = L"$x$ \text{ (a.u.)}", 
@@ -399,11 +411,20 @@ function plot_Slocombe_GC_potential()
                xlabelsize = 27,limits = ((-3.8, 2.4), (-15.5, 15.5)),
                ylabelsize = 27, titlesize = 25, xticklabelsize = 20, yticklabelsize = 20)
     contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5)
- 
-    text!(ax2, -3.7, 10.2; text = L"\text{(b)}", fontsize = 30)
-   
-    display(fig)
-    # save("moyal_solver/graphics/hamiltonian_model_gc.pdf", fig)
+# bands symbolizing Ωs
+    Ω_C = -4.4:0.1:-1.0
+    Ω_B = -1.0:0.1:1.11
+    Ω_T = 1.1:0.1:2.7
+    lines!(ax1, Ω_C, [-0.0005], color = :orange, linewidth = 8.)
+    lines!(ax1, Ω_T, [-0.0005], color = :plum2, linewidth = 8.)
+    lines!(ax1, Ω_B, [-0.0005], color = :gray60, linewidth = 8.)
+    
+    text!(ax1, -2.7, 0.0015; text =  L"\Omega_{\mathrm{C}}", fontsize = 25)
+    text!(ax1, -0.1, 0.0015; text =  L"\Omega_{\mathrm{B}}", fontsize = 25)
+    text!(ax1, 1.7, 0.0015; text =  L"\Omega_{\mathrm{T}}", fontsize = 25)
+    
+    # display(fig)
+    save("moyal_solver/graphics/hamiltonian_model_gc.pdf", fig)
     return fig
 end
 plot_Slocombe_GC_potential()
@@ -440,18 +461,11 @@ get_exp_vals()
 ## create trajectory of xp values
 function get_traj_of_exp_vals(is_at::Bool = true)
     if is_at
-        V1 = 0.1617
-        V2 = 0.082
-        a1 = 0.305
-        a2 = 0.755
-        r1 = -2.7
-        r2 = 2.1
         m = 1836
         x_unique = range(-3.8, 2.8, 300)
         p_unique = range(-12.5, 12.5, 200)
         
         t = 0.0  
-        Vx = @. V1 * (exp(-2 * a1 * (x_unique - r1)) - 2 * exp(-a1 * (x_unique - r1))) + V2 * (exp(-2 * a2 * (r2 - x_unique)) - 2 * exp(-a2 * (r2 - x_unique))) + 0.166 + 0.00019
         Emin = 0
         Emax = 0 + 0.1  
         levels = range(Emin, Emax, length=20)
@@ -459,10 +473,8 @@ function get_traj_of_exp_vals(is_at::Bool = true)
     else
         x_unique = range(-4.15, 2.8, 300)
         p_unique = range(-12.5, 12.5, 200)
-        # v_unique = x_unique./alpha
         
         t = 0.0  
-        # Vx = @. a4 * v_unique^4 + a3 * v_unique^3 + a2 * v_unique^2 + a1 * v_unique + a0 
         m = 1836
         
         Emin = 0
@@ -474,25 +486,32 @@ function get_traj_of_exp_vals(is_at::Bool = true)
     t = data[:, 2]
     x = data[:, 3]
     p = data[:, 4]
-    color = cgrad(:batlow)
+    
+    contour_cmap = :viridis                  
+    trajectory_color = (:midnightblue, 0.9)   
+    start_point_color = :coral1              
+    # -------------------------------
+
     fig = Figure(size=(800, 500))
     title = is_at ? L"\text{A-T}" : L"\text{G-C}"
     ax2 = Axis(fig[1,1], 
                xlabel = L"x \; \text{(a.u.)}", 
                ylabel = L"p \; (\text{a.u.})",
                title = title,
-               xlabelsize = 25,
-               ylabelsize = 25, titlesize = 25,
-               xticklabelsize = 20, yticklabelsize = 20,
+               xlabelsize = 30,
+               ylabelsize = 30, titlesize = 30,
+               xticklabelsize = 24, yticklabelsize = 24,
                limits = is_at ? ((-2.95, 2.8), (-12.5, 12.5)) :  ((-4.1, 2.4), (-12.5, 12.5))
                )
-    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5, colormap = color)
-    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = :lightcoral, linewidth = 3.5)
+               
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.2, alpha = 0.4, colormap = contour_cmap)
     
-    scatter!(ax2, [-1.1], [5.4], color=:maroon, markersize=15, label="centrum początkowego gaussianu")
+    lines!(ax2, x, p, label = "trajektoria wartości oczekiwanych", color = trajectory_color, linewidth = 3.5)
+    
+    scatter!(ax2, [-1.1], [5.4], color=start_point_color, markersize=15, label="centrum początkowego gaussianu")
+    
     Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 24, orientation = :horizontal, nbanks = 2)
     
-
     display(fig)
     if is_at
         save("moyal_solver/graphics/AT/trajectory.pdf", fig)
@@ -501,7 +520,7 @@ function get_traj_of_exp_vals(is_at::Bool = true)
     end
     return fig
 end
-get_traj_of_exp_vals(false)
+get_traj_of_exp_vals(true)
 ##
 function get_traj_harmonic_oscillator()
     x_unique = range(-5.2, 5.2, 200)
@@ -515,7 +534,9 @@ function get_traj_harmonic_oscillator()
     Emin = 0
     Emax = 0 + 7.
     levels = range(Emin, Emax, length=15)
-    color = cgrad(:Paired_12)
+    contour_cmap = :viridis                  
+    trajectory_color = (:midnightblue, 0.9)   
+    start_point_color = :coral1  
     fig = Figure(size=(800, 500))
     ax2 = Axis(fig[1,1], 
                xlabel = L"x \; \text{(a.u.)}", 
@@ -526,10 +547,10 @@ function get_traj_harmonic_oscillator()
                xticklabelsize = 20, yticklabelsize = 20,
                limits = ((-2.7, 2.7), (-2.7, 2.7))
                )
-    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5, colormap = color)
-    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = :lightcoral, linewidth = 3.5)
+    contour!(ax2, x_unique, p_unique, H', levels=levels, linewidth=1.5, alpha = 0.5, colormap = contour_cmap)
+    lines!(ax2, x, p, label = "trajekroria wartości oczekiwanych", color = trajectory_color, linewidth = 3.5)
     
-    scatter!(ax2, [-1.0], [1.], color=:maroon, markersize=15, label="centrum początkowego gaussianu")
+    scatter!(ax2, [-1.0], [1.], color=start_point_color, markersize=15, label="centrum początkowego gaussianu")
     Legend(fig[2,1], ax2, position=:lb, framevisible = false, labelsize = 24, orientation = :horizontal, nbanks = 2)
     save("moyal_solver/graphics/HO_trajectory.pdf", fig)
     return fig
@@ -613,9 +634,6 @@ function plot_wigner_3d(x_coords, p_coords, W;
     # Sumujemy po pierwszym wymiarze (x)
     P_p = sum(W, dims=1)[:] .* dx
 
-    # --- SKALOWANIE ROZKŁADÓW DO WYKRESU ---
-    # Ponieważ W_scaled jest w skali asinh, rozkłady brzegowe (które są duże) 
-    # warto dopasować wizualnie do wysokości osi Z (np. max wysokość = 0.25)
     max_z_display = 0.25
     P_x_plot = (P_x ./ maximum(P_x)) .* max_z_display .+ z_lims[1]
     P_p_plot = (P_p ./ maximum(P_p)) .* max_z_display .+ z_lims[1]
@@ -704,9 +722,9 @@ function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
     # Region masks
     # ============================================================
 
-    can_mask = x_unique .>= 1.21
-    bar_mask = (-0.51 .<= x_unique) .& (x_unique .< 1.21)
-    tau_mask = x_unique .< -0.51
+    can_mask = is_at ? x_unique .< -0.51 : x_unique .< -1.03
+    bar_mask = is_at ? (-0.51 .<= x_unique) .& (x_unique .< 1.21) : (-1.03 .<= x_unique) .& (x_unique .< 1.15)
+    tau_mask = is_at ? x_unique .>= 1.21 : x_unique .>= 1.15
 
     # ============================================================
     # Arrays
@@ -786,15 +804,15 @@ function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
         fig1[1,1],
         xlabel = L"t \; (10^3\ \mathrm{a.u.})",
         ylabel = L"\mathcal{P}_{\Omega}(t)",
-        xlabelsize = 28,
-        ylabelsize = 28,
-        xticklabelsize = 22,
-        yticklabelsize = 22
+        xlabelsize = 32,
+        ylabelsize = 32,
+        xticklabelsize = 24,
+        yticklabelsize = 24
     )
 
-    lines!(ax1, t, P_can, label = L"\Omega \to \text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
-    lines!(ax1, t, P_bar, label = L"\Omega \to \text{bariera}", linewidth = 5.0, color = :deepskyblue3)
-    lines!(ax1, t, P_tau, label = L"\Omega \to \text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
+    lines!(ax1, t, P_can, label = L"\Omega_{\mathrm{C}}", linewidth = 5.0, color = is_at ? :lightskyblue : :orange)
+    lines!(ax1, t, P_bar, label = L"\Omega_{\mathrm{B}}", linewidth = 5.0, color = :gray)
+    lines!(ax1, t, P_tau, label = L"\Omega_{\mathrm{T}}", linewidth = 5.0, color = is_at ? :springgreen4 : :plum2)
 
     Legend(fig1[2,1], ax1, labelsize = 32, orientation = :horizontal, framevisible = false)
 
@@ -814,9 +832,9 @@ function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
         yticklabelsize = 22
     )
 
-    lines!(ax2, t, L_can, label = L"\Omega \to \text{forma tautomeryczna}", linewidth = 5.0, color = :limegreen)
-    lines!(ax2, t, L_bar, label = L"\Omega \to \text{bariera}", linewidth = 5.0, color = :deepskyblue3)
-    lines!(ax2, t, L_tau, label = L"\Omega \to \text{forma kanoniczna}", linewidth = 5.0, color = :palevioletred3)
+    lines!(ax2, t, L_can, label = L"\Omega_{\mathrm{C}}", linewidth = 5.0, color = :limegreen)
+    lines!(ax2, t, L_bar, label = L"\Omega_{\mathrm{B}}", linewidth = 5.0, color = :deepskyblue3)
+    lines!(ax2, t, L_tau, label = L"\Omega_{\mathrm{T}}", linewidth = 5.0, color = :palevioletred3)
 
     Legend(fig2[2,1], ax2, labelsize = 32, orientation = :horizontal, framevisible = false)
 
@@ -867,7 +885,7 @@ function get_percent_of_WDF(; is_at::Bool = true, is_tau_init::Bool = false)
         Neg_total
     )
 end
-get_percent_of_WDF(is_at = false, is_tau_init = false)
+get_percent_of_WDF(is_at = false, is_tau_init = true)
 
 ## FFT delta
 using FFTW

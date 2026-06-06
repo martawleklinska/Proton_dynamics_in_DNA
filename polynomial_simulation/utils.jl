@@ -106,9 +106,9 @@ function energy_differences()
     ns_gc = 0:(n_gc-1)
 
     fig = Figure(resolution = (1000, 400))
-    ax1 = Axis(fig[1,1], xlabel = L"$n$", ylabel = L"$\Delta E $", title = L"\text{A-T}",
+    ax1 = Axis(fig[1,1], xlabel = L"$n$", ylabel = L"$\delta E $", title = L"\text{A-T}",
                 xlabelsize = 28, ylabelsize = 28, titlesize = 28, xticklabelsize = 24, yticklabelsize = 24)
-    ax2 = Axis(fig[1,2], xlabel = L"$n$", ylabel = L"$\Delta E $", title = L"\text{G-C}",
+    ax2 = Axis(fig[1,2], xlabel = L"$n$", ylabel = L"$\delta E $", title = L"\text{G-C}",
                 xlabelsize = 28, ylabelsize = 28, titlesize = 28, xticklabelsize = 24, yticklabelsize = 24)
     # ax1.yticks = [0, 1.0, 2.0, 3.0]
     # ax2.yticks = [0, 1, 2, 3]
@@ -122,13 +122,15 @@ function energy_differences()
     # display(fig)
     return fig
 end
-energy_differences()
-
+# energy_differences()
+using CairoMakie
+include("schrodinger_eqn.jl")
+include("../true_calc_at/schrodinger_eqn.jl")
 function get_coth_approx()
     kb = 3.167e-6
     fig = Figure(size = (1000, 500))
     ax = Axis(fig[1,1], 
-        xlabel = L"$x = {2k_B T}/{(\hbar\omega)}$", 
+        xlabel = L"$T \; \cdot \;{2k_{\mathrm{B}}}/{(\hbar\omega)}$", 
         ylabel = L"$\varepsilon / (\hbar\omega/2)$",
         limits = ((0.0, 1.5), (-5, 3)),
     xlabelsize = 30, ylabelsize = 30, xticklabelsize = 25, yticklabelsize = 25)
@@ -145,12 +147,13 @@ function get_coth_approx()
     
     coth_all(x) = (exp(1/x) + exp(-1/x)) / (exp(1/x) - exp(-1/x))
 
-    lines!(ax, x, approx1, label = L"I: x", color = :red, linewidth = 5)
-    lines!(ax, x, approx2, label = L"II: x + \frac{1}{3x}\quad ", color = :blue, linewidth = 5)
-    lines!(ax, x, approx3, label = L"III: x + \frac{1}{3x} - \frac{1}{45x^3}", color = :green, linewidth = 5)
-    lines!(ax, x, coth_all, label = L"\mathrm{ctgh}(1/x)", color = :black, linestyle = :dash, linewidth = 5)
+    lines!(ax, x, approx1, label = L"ε^{\mathrm{I}}", color = :red, linewidth = 5)
+    lines!(ax, x, approx2, label = L"ε^{\mathrm{II}}", color = :blue, linewidth = 5)
+    lines!(ax, x, approx3, label = L"ε^{\mathrm{III}}", color = :green, linewidth = 5)
+    lines!(ax, x, coth_all, label = L"ε", color = :black, linestyle = :dash, linewidth = 5)
     
-    axislegend(ax, position = :rb, labelsize = 30, framevisible = false)
+    axislegend(ax, position = :rb, labelsize = 30, framevisible = false, orientation = :horizontal)
     save("graphics/ctgh_x.pdf", fig)
     return fig
 end
+get_coth_approx()
